@@ -10,4 +10,7 @@
   <Target Name="MakeZip" AfterTargets="Publish">
     <ZipDirectory SourceDirectory="$(PublishDir)" DestinationFile="$(OutputPath)\release.zip" />
   </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\InsightLogParser.Common\InsightLogParser.Common.csproj" />
+  </ItemGroup>
 </Project>
