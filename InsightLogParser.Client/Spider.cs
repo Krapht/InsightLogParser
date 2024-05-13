@@ -78,7 +78,7 @@ namespace InsightLogParser.Client
             //TODO: Verify that it is a world puzzle
 
             //Local
-            var isSolved = _db.GetLastSolved(zone, type, puzzleId);
+            var lastSolved = _db.GetLastSolved(zone, type, puzzleId);
             _db.AddSolved(zone, type, puzzleId, timestamp);
 
             if (!WorldInformation.Zones.TryGetValue(zone, out var worldZone)) return;
@@ -90,7 +90,9 @@ namespace InsightLogParser.Client
             var isFresh = lastResetTime < _sessionStart;
             var (parsedCount, cycleCount, totalCount) = _db.GetParsedCount(zone, type, puzzleId, lastResetTime);
 
-            _messageWriter.WriteParsed(zoneName, puzzleName, puzzleId, parsedCount, cycleCount, totalCount, worldPuzzle.TotalPuzzles, timeToCycle);
+            var solvedAgo = lastSolved.HasValue ? _timeTools.GetTimeSince(lastSolved.Value) : (TimeSpan?)null;
+
+            _messageWriter.WriteParsed(zoneName, puzzleName, puzzleId, parsedCount, cycleCount, totalCount, worldPuzzle.TotalPuzzles, timeToCycle, solvedAgo);
 
             //Online
             var cetusTask = _cetusClient.PostSolvedAsync(new PlayerReport()
@@ -103,7 +105,7 @@ namespace InsightLogParser.Client
                 ServerAddress = _serverAddress,
             });
 
-            if (isSolved.HasValue)
+            if (lastSolved.HasValue)
             {
                 _beeper.BeepForKnownParse();
             }

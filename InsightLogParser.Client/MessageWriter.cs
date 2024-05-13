@@ -170,7 +170,7 @@ namespace InsightLogParser.Client
             }
         }
 
-        public void WriteParsed(string puzzleZone, string puzzleName, int puzzleId, int? parsedCount, int? cycleCount, int? totalParsed, int total, TimeSpan timeLeftInCycle)
+        public void WriteParsed(string puzzleZone, string puzzleName, int puzzleId, int? parsedCount, int? cycleCount, int? totalParsed, int total, TimeSpan timeLeftInCycle, TimeSpan? lastSolved)
         {
             lock (_lock)
             {
@@ -189,6 +189,10 @@ namespace InsightLogParser.Client
                 else
                 {
                     Console.Write($"{parsedCount?.ToString() ?? "??"} times.");
+                    if (lastSolved.HasValue)
+                    {
+                        Console.Write($" Last time was {lastSolved.Value.ToHHMMSS(false)} ago");
+                    }
                 }
                 Console.WriteLine();
                 Console.Write($"Cycle: {cycleCount?.ToString() ?? "??"}");
