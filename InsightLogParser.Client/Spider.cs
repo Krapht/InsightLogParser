@@ -168,6 +168,7 @@ namespace InsightLogParser.Client
                 Zone = zone,
                 Timestamp = timestamp,
                 IsFresh = isFresh,
+                ServerAddress = _serverAddress,
             });
             if (lastSolved.HasValue)
             {
