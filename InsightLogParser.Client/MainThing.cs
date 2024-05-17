@@ -42,14 +42,18 @@ public class MainThing
         }
 
         await InitializeParsedDbAsync(configuration);
-        await InitializePuzzleHandlerAsync(computer, _db);
+        var matchExpected =  await InitializePuzzleHandlerAsync(computer, _db);
+        if (matchExpected)
+        {
+            _db.RemoveNonWorldPuzzles(_puzzleHandler);
+        }
 
         var cycleTimer = await CycleTimer.CreateAndStartAsync(_messageWriter, _timeTools).ConfigureAwait(ConfigureAwaitOptions.None);
 
         await InitializeCetusClientAsync(configuration);
 
         _messageWriter.WriteInitLine("Poking spider", ConsoleColor.Green);
-        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools);
+        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler);
 
         _messageWriter.WriteInitLine($"Using '{logFilePath}' as the log file", ConsoleColor.Green);
         _messageWriter.WriteInitLine("Starting log processor", ConsoleColor.Green);
@@ -80,7 +84,7 @@ public class MainThing
         return configuration;
     }
 
-    private async Task InitializePuzzleHandlerAsync(UserComputer computer, ParsedDatabase db)
+    private async Task<bool> InitializePuzzleHandlerAsync(UserComputer computer, ParsedDatabase db)
     {
         _puzzleHandler = new GamePuzzleHandler();
 
@@ -91,12 +95,12 @@ public class MainThing
         if (jsonPath == null)
         {
             _messageWriter.WriteInitLine($"Unable to locate Puzzle.json file. {unavailable}", ConsoleColor.Red);
-            return;
+            return false;
         }
         if (!File.Exists(jsonPath))
         {
             _messageWriter.WriteInitLine($"Expected file '{jsonPath}' did not exist. {unavailable}", ConsoleColor.Red);
-            return;
+            return false;
         }
 
         try
@@ -107,13 +111,13 @@ public class MainThing
         {
             _messageWriter.WriteInitLine($"Unexpected error occured when reading the puzzle file. {unavailable}", ConsoleColor.Red);
             _messageWriter.WriteDebug(ex.ToString());
-            return;
+            return false;
         }
 
         if (!_puzzleHandler.PuzzleDatabase.Keys.Any())
         {
             _messageWriter.WriteInitLine($"Puzzle.json could not be loaded correctly. {unavailable}", ConsoleColor.Red);
-            return;
+            return false;
         }
 
         //Check puzzle counts
@@ -170,10 +174,13 @@ public class MainThing
             _messageWriter.WriteDebug($"Reminder: Still missing zone count for {WorldInformation.GetPuzzleName(totalsOnly)}");
         }
 
-        if (!unexpected)
+        if (unexpected)
         {
-            _messageWriter.WriteInitLine("Puzzle counts in Puzzle.json all match expected values", ConsoleColor.Green);
+            return false;
         }
+
+        _messageWriter.WriteInitLine("Puzzle counts in Puzzle.json all match expected values", ConsoleColor.Green);
+        return true;
     }
 
     private async Task InitializeParsedDbAsync(Configuration configuration)

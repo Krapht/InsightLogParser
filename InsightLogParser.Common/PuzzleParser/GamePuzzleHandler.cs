@@ -138,6 +138,12 @@ public class GamePuzzleHandler
         };
     }
 
+    public bool? IsWorldPuzzle(int puzzleId)
+    {
+        if (PuzzleDatabase.Count == 0) return null;
+        return PuzzleDatabase.ContainsKey(puzzleId) && PuzzleDatabase[puzzleId].IsWorldPuzzle;
+    }
+
     private bool IsWorldPuzzle(PuzzleType type, SerializedInfo deserialized)
     {
         switch (type)

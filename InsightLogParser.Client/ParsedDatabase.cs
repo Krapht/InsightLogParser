@@ -1,6 +1,8 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using InsightLogParser.Common.ParsedDbModels;
+using InsightLogParser.Common.PuzzleParser;
 using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Client
@@ -15,7 +17,7 @@ namespace InsightLogParser.Client
         //Running states
         private bool _started = false;
         private readonly CancellationTokenSource _cts;
-        private Task _backupTask = null!;
+        private Task _periodicSaveTask = null!;
 
         private readonly object _lock = new();
         private bool _dirty;
@@ -65,7 +67,7 @@ namespace InsightLogParser.Client
                 _db = JsonSerializer.Deserialize<ParsedDb>(jsonContent) ?? GetEmptyDb();
             }
 
-            _backupTask = StartBackupTimer(_cts.Token);
+            _periodicSaveTask = StartSaveTimer(_cts.Token);
             var totalSolved = GetTotalSolved();
             _messageWriter.WriteInitLine($"Parsed database loaded with {totalSolved} solved puzzles", ConsoleColor.Green);
 
@@ -77,7 +79,7 @@ namespace InsightLogParser.Client
             if (!_started) return;
             _messageWriter.WriteDebug("Stopping parsed database...");
             await _cts.CancelAsync().ConfigureAwait(false);
-            await _backupTask.ConfigureAwait(false);
+            await _periodicSaveTask.ConfigureAwait(false);
             await SaveDatabaseAsync().ConfigureAwait(false);
             _messageWriter.WriteDebug("Parsed database stopped");
         }
@@ -103,7 +105,7 @@ namespace InsightLogParser.Client
             _messageWriter.WriteInfo("Saved parsed database");
         }
 
-        private async Task StartBackupTimer(CancellationToken cancelToken)
+        private async Task StartSaveTimer(CancellationToken cancelToken)
         {
             using (var timer = new PeriodicTimer(TimeSpan.FromSeconds(60)))
             {
@@ -115,7 +117,7 @@ namespace InsightLogParser.Client
                     }
                     catch (OperationCanceledException)
                     {
-                        _messageWriter.WriteDebug("DB Backup timer cancelled");
+                        _messageWriter.WriteDebug("DB save timer cancelled");
                     }
                     await SaveDatabaseAsync().ConfigureAwait(ConfigureAwaitOptions.None);
                 }
@@ -274,6 +276,56 @@ namespace InsightLogParser.Client
 
                 return (count, cycleCount, puzzleType.Keys.Count);
             }
+        }
+
+        public void RemoveNonWorldPuzzles(GamePuzzleHandler puzzleHandler)
+        {
+            lock (_lock)
+            {
+                var worldPuzzleIds = puzzleHandler.PuzzleDatabase.Values
+                    .Where(x => x.IsWorldPuzzle)
+                    .Select(x => x.KrakenId)
+                    .ToHashSet();
+                foreach (var zoneKey in _db.Zones.Keys)
+                {
+                    var zone = _db.Zones[zoneKey];
+                    foreach (var type in zone.SolvedEntries.Keys)
+                    {
+                        var solvedPuzzles = zone.SolvedEntries[type];
+                        var valid = solvedPuzzles.Keys.Intersect(worldPuzzleIds);
+                        var toRemove = solvedPuzzles.Keys.Except(valid).ToList();
+                        var removeCount = toRemove.Count;
+                        if (removeCount > 0)
+                        {
+                            foreach (var puzzleId in toRemove)
+                            {
+                                solvedPuzzles.Remove(puzzleId);
+                            }
+                            _dirty = true;
+                            var puzzleName = WorldInformation.GetPuzzleName(type);
+                            var zoneName = WorldInformation.GetZoneName(zoneKey);
+
+                            _messageWriter.WriteInitLine($"Cleaning up {removeCount} non-world {puzzleName} in {zoneName}", ConsoleColor.Yellow);
+                        }
+                    }
+                }
+
+                if (_dirty)
+                {
+                    MakeBackup();
+                }
+            }
+        }
+
+        private void MakeBackup()
+        {
+            var pathPart = Path.GetDirectoryName(_jsonPath);
+            if (string.IsNullOrWhiteSpace(pathPart)) pathPart = ".";
+            var filePart = Path.GetFileNameWithoutExtension(_jsonPath);
+            var extensionPart = Path.GetExtension(_jsonPath);
+            var timestring = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            var backupName = $"{filePart}-backup-{timestring}{extensionPart}";
+            File.Copy(_jsonPath, backupName);
         }
     }
 }

@@ -2,6 +2,7 @@
 using InsightLogParser.Client.Cetus;
 using InsightLogParser.Common;
 using InsightLogParser.Common.ApiModels;
+using InsightLogParser.Common.PuzzleParser;
 using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Client
@@ -14,6 +15,7 @@ namespace InsightLogParser.Client
         private readonly ParsedDatabase _db;
         private readonly ICetusClient _cetusClient;
         private readonly TimeTools _timeTools;
+        private readonly GamePuzzleHandler _gamePuzzleHandler;
 
         //State
         private DateTimeOffset? _sessionStart;
@@ -27,6 +29,7 @@ namespace InsightLogParser.Client
             , ParsedDatabase db
             , ICetusClient cetusClient
             , TimeTools timeTools
+            , GamePuzzleHandler gamePuzzleHandler
             )
         {
             _messageWriter = messageWriter;
@@ -35,6 +38,7 @@ namespace InsightLogParser.Client
             _db = db;
             _cetusClient = cetusClient;
             _timeTools = timeTools;
+            _gamePuzzleHandler = gamePuzzleHandler;
         }
 
         public void StartSession(DateTimeOffset timestamp)
@@ -65,19 +69,7 @@ namespace InsightLogParser.Client
 
         public async Task SolvedAsync(DateTimeOffset timestamp, int puzzleId, PuzzleZone zone, PuzzleType type, short? difficulty)
         {
-            if (ShouldSkipZone(zone))
-            {
-                _messageWriter.WriteDebug($"Skipping Solved for {WorldInformation.GetZoneName(zone)}");
-                return;
-            }
-
-            if (ShouldSSkipPuzzleType(type))
-            {
-                _messageWriter.WriteDebug($"Skipping Solved for {WorldInformation.GetPuzzleName(type)}");
-                return;
-            }
-
-            //TODO: Verify that it is a world puzzle
+            if (!ShouldHandlePuzzle(puzzleId, zone, type)) return;
 
             //Local
             var lastSolved = _db.GetLastSolved(zone, type, puzzleId);
@@ -135,17 +127,7 @@ namespace InsightLogParser.Client
 
         public async Task OpenedAsync(DateTimeOffset timestamp, int puzzleId, PuzzleZone zone, PuzzleType type, short? difficulty)
         {
-            if (ShouldSkipZone(zone))
-            {
-                _messageWriter.WriteDebug($"Skipping Solved for {WorldInformation.GetZoneName(zone)}");
-                return;
-            }
-
-            if (ShouldSSkipPuzzleType(type))
-            {
-                _messageWriter.WriteDebug($"Skipping Solved for {WorldInformation.GetPuzzleName(type)}");
-                return;
-            }
+            if (!ShouldHandlePuzzle(puzzleId, zone, type)) return;
 
             //Local
             var lastSolved = _db.GetLastSolved(zone, type, puzzleId);
@@ -175,6 +157,35 @@ namespace InsightLogParser.Client
                 _beeper.BeepForOpeningSolvedPuzzle();
             }
             await cetusTask.ConfigureAwait(ConfigureAwaitOptions.None);
+        }
+
+        private bool ShouldHandlePuzzle(int puzzleId, PuzzleZone zone, PuzzleType type)
+        {
+            if (ShouldSkipZone(zone))
+            {
+                _messageWriter.WriteDebug($"Skipping puzzle in {WorldInformation.GetZoneName(zone)}");
+                return false;
+            }
+
+            if (ShouldSSkipPuzzleType(type))
+            {
+                _messageWriter.WriteDebug($"Skipping {WorldInformation.GetPuzzleName(type)} puzzle");
+                return false;
+            }
+
+            var isWorldPuzzle = _gamePuzzleHandler.IsWorldPuzzle(puzzleId);
+            if (isWorldPuzzle == null)
+            {
+                _messageWriter.WriteDebug("No puzzle.json found, everything is a world puzzle");
+                return true;
+            }
+            if (isWorldPuzzle == false)
+            {
+                _messageWriter.WriteDebug("Puzzle was not a world puzzle and will be skipped");
+                return false;
+            }
+
+            return true;
         }
 
         public async Task ClosedAsync(DateTimeOffset timestamp, int puzzleId, PuzzleZone zone, PuzzleType type, short? difficulty)
