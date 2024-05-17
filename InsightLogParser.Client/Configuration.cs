@@ -12,7 +12,7 @@ public class Configuration
     public string? ForcedParsedDatabasePath { get; set; }
 
     public string? CetusApiKey { get; set; }
-    public Guid? CetusPlayerGuid { get; set; }
+    public Guid? CetusPlayerId { get; set; }
     public string? CetusUri { get; set; }
 
     public bool ShowGameLogLines { get; set; } = false;

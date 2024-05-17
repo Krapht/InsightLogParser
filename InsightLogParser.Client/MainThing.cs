@@ -192,7 +192,7 @@ public class MainThing
 
     private async Task InitializeCetusClientAsync(Configuration configuration)
     {
-        if (string.IsNullOrWhiteSpace(configuration.CetusUri) || string.IsNullOrWhiteSpace(configuration.CetusApiKey) || configuration.CetusPlayerGuid == null)
+        if (string.IsNullOrWhiteSpace(configuration.CetusUri) || string.IsNullOrWhiteSpace(configuration.CetusApiKey) || configuration.CetusPlayerId == null)
         {
             _messageWriter.WriteInitLine("Cetus configuration missing, staying in offline mode", ConsoleColor.Green);
             _apiClient = new DummyCetusClient();
@@ -200,13 +200,13 @@ public class MainThing
         }
 
         var url = configuration.CetusUri;
-        var playerId = configuration.CetusPlayerGuid.Value;
+        var playerId = configuration.CetusPlayerId.Value;
         var apiKey = configuration.CetusApiKey;
 
         _messageWriter.WriteInitLine("Cetus configuration detected, switching to online mode", ConsoleColor.Green);
         _apiClient = new CetusClient(url, _messageWriter);
 
-        _messageWriter.WriteDebug($"Using player id {configuration.CetusPlayerGuid.Value:D}");
+        _messageWriter.WriteDebug($"Using player id {playerId:D}");
         var couldAuthenticate = await _apiClient.AuthenticateAsync(playerId, apiKey).ConfigureAwait(ConfigureAwaitOptions.None);
         if (!couldAuthenticate)
         {
