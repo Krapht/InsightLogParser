@@ -46,7 +46,7 @@ public class MainThing
 
         var cycleTimer = await CycleTimer.CreateAndStartAsync(_messageWriter, _timeTools).ConfigureAwait(ConfigureAwaitOptions.None);
 
-        InitializeCetusClient(configuration);
+        await InitializeCetusClientAsync(configuration);
 
         _messageWriter.WriteInitLine("Poking spider", ConsoleColor.Green);
         var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools);
@@ -183,16 +183,30 @@ public class MainThing
         await _db.StartAsync();
     }
 
-    private void InitializeCetusClient(Configuration configuration)
+    private async Task InitializeCetusClientAsync(Configuration configuration)
     {
-        if (string.IsNullOrWhiteSpace(configuration.CetusUri) || string.IsNullOrWhiteSpace(configuration.CetusApiKey))
+        if (string.IsNullOrWhiteSpace(configuration.CetusUri) || string.IsNullOrWhiteSpace(configuration.CetusApiKey) || configuration.CetusPlayerGuid == null)
         {
             _messageWriter.WriteInitLine("Cetus configuration missing, staying in offline mode", ConsoleColor.Green);
             _apiClient = new DummyCetusClient();
             return;
         }
 
+        var url = configuration.CetusUri;
+        var playerId = configuration.CetusPlayerGuid.Value;
+        var apiKey = configuration.CetusApiKey;
+
         _messageWriter.WriteInitLine("Cetus configuration detected, switching to online mode", ConsoleColor.Green);
-        _apiClient = new CetusClient(configuration.CetusUri, _messageWriter);
+        _apiClient = new CetusClient(url, _messageWriter);
+
+        _messageWriter.WriteDebug($"Using player id {configuration.CetusPlayerGuid.Value:D}");
+        var couldAuthenticate = await _apiClient.AuthenticateAsync(playerId, apiKey).ConfigureAwait(ConfigureAwaitOptions.None);
+        if (!couldAuthenticate)
+        {
+            _messageWriter.WriteInitLine("Failed to authenticate with Cetus, falling back to offline mode", ConsoleColor.Red);
+            _apiClient.Dispose();
+            _apiClient = new DummyCetusClient();
+        }
+        _messageWriter.WriteInitLine($"Successfully authenticated with Cetus using player id {playerId:D}", ConsoleColor.Green);
     }
 }

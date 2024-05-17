@@ -7,7 +7,6 @@ internal interface ICetusClient : IDisposable
 {
     //Misc operations
     bool IsDummy();
-    void ClearAuth();
     Task<bool> AuthenticateAsync(Guid playerId, string configurationCetusApiKey);
 
     //Get operations

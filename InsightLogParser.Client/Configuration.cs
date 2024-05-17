@@ -12,6 +12,7 @@ public class Configuration
     public string? ForcedParsedDatabasePath { get; set; }
 
     public string? CetusApiKey { get; set; }
+    public Guid? CetusPlayerGuid { get; set; }
     public string? CetusUri { get; set; }
 
     public bool ShowGameLogLines { get; set; } = false;
@@ -31,5 +32,4 @@ public class Configuration
     public int BeepForAttentionDuration { get; set; } = 200;
     public int BeepForAttentionCount { get; set; } = 3;
     public int BeepForAttentionInterval { get; set; } = 200;
-
 }

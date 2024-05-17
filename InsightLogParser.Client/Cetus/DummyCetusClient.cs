@@ -7,7 +7,6 @@ namespace InsightLogParser.Client.Cetus
     internal class DummyCetusClient : ICetusClient
     {
         public bool IsDummy() => true;
-        public void ClearAuth() { }
 
         public Task<SolvedResponse?> PostSolvedAsync(PlayerReport request)
         {

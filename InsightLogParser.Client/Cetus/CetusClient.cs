@@ -34,7 +34,7 @@ internal class CetusClient : ICetusClient
         const string httpsPrefix = "https://";
 
         if (!baseUri.StartsWith(httpsPrefix)) baseUri = $"{httpsPrefix}{baseUri}";
-        _httpClient = new HttpClient()
+        _httpClient = new HttpClient
         {
             BaseAddress = new Uri(baseUri)
         };
@@ -81,14 +81,6 @@ internal class CetusClient : ICetusClient
     {
         _basicAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{playerId:N}:{apiKey}"));
         return await RefreshAuthAsync().ConfigureAwait(ConfigureAwaitOptions.None);
-    }
-
-    public void ClearAuth()
-    {
-        _messageWriter.WriteDebug("CETUS: Auth was cleared");
-        _httpClient.DefaultRequestHeaders.Authorization = null;
-        _tokenValid = null;
-        _basicAuth = null;
     }
 
     public void Dispose()

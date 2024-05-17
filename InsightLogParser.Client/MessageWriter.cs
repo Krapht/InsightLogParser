@@ -399,15 +399,5 @@ namespace InsightLogParser.Client
                 }
             }
         }
-
-        public void WriteConnectedToCetus()
-        {
-            lock (_lock)
-            {
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine("Successfully connected to Cetus");
-                Console.ResetColor();
-            }
-        }
     }
 }

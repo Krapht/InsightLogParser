@@ -18,6 +18,9 @@ namespace InsightLogParser.Client
         //State
         private DateTimeOffset? _sessionStart;
         private string? _serverAddress;
+        private string? _lastScreenshot = null;
+        private int? _lastSolvedPuzzle = null;
+        private Action<string, string, int> _screenshotCallback = null;
 
         public Spider(MessageWriter messageWriter
             , Configuration configuration
@@ -52,7 +55,6 @@ namespace InsightLogParser.Client
             _sessionStart = null;
             _serverAddress = null;
             _messageWriter.SessionEnded(timestamp);
-            _cetusClient.ClearAuth();
         }
 
         public async Task SessionBeingDisconnectedAsync()
@@ -207,16 +209,6 @@ namespace InsightLogParser.Client
             if (_configuration.ShowGameLogLines)
             {
                 _messageWriter.WriteLogLine(line);
-            }
-        }
-
-        public async Task SetPlayerAsync(Guid playerId)
-        {
-            _messageWriter.WriteDebug($"Using player id {playerId:D}");
-            var couldAuthenticate = await _cetusClient.AuthenticateAsync(playerId, _configuration.CetusApiKey!).ConfigureAwait(ConfigureAwaitOptions.None);
-            if (IsOnline() && couldAuthenticate)
-            {
-                _messageWriter.WriteConnectedToCetus();
             }
         }
 

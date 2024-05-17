@@ -1,7 +1,9 @@
-﻿using InsightLogParser.Common.World;
+﻿using System.Diagnostics;
+using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Common.PuzzleParser;
 
+[DebuggerDisplay("{KrakenId}-{Zone}-{Type}")]
 public class InsightPuzzle
 {
     /// <summary>

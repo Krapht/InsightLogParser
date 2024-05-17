@@ -104,9 +104,6 @@ namespace InsightLogParser.Client.Parsing
                             case LogEventType.SessionStart:
                                 _spider.StartSession(logEvent.LogTime);
                                 break;
-                            case LogEventType.PlayerIdentified:
-                                await _spider.SetPlayerAsync(Debugger.IsAttached ? DebugOverrides.PlayerId : logEvent.PlayerId);
-                                break;
                             case LogEventType.JoinedServer:
                                 _spider.SetServer(logEvent.ServerAddress!);
                                 break;

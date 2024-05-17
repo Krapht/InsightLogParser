@@ -11,7 +11,6 @@ namespace InsightLogParser.Client.Parsing
     {
         private readonly Action<string> _logLineCallback;
         private const string TimestampPattern = @"^\[(.{19}):\d{3}\]";
-        private static readonly Regex _playerIdRegex = new Regex(TimestampPattern + @".*Player sign-in to Kraken succeeded with user ID (.{36})", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex _prepRegex = new Regex(TimestampPattern + @".*About to record BhvrAnalytics event named \""(.*)\""", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex _eventRegex = new Regex(TimestampPattern + @".*Attribute ""data"" has value \""(.*)\""", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex _restartHandshakeRegex = new Regex(TimestampPattern + @".*Beginning restart handshake process", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
@@ -26,7 +25,6 @@ namespace InsightLogParser.Client.Parsing
 
         public async IAsyncEnumerable<LogEvent> LogEvents(LogReader reader, [EnumeratorCancellation] CancellationToken token = default)
         {
-            var playerId = Guid.Empty;
             string? lastEvent = null;
             await foreach (var line in reader.ReadLinesAsync(token).ConfigureAwait(false))
             {
@@ -46,21 +44,7 @@ namespace InsightLogParser.Client.Parsing
                     {
                         Type = LogEventType.PuzzleEvent,
                         LogTime = @event.Value.timestamp,
-                        PlayerId = playerId,
                         Event = @event.Value.parsedEvent,
-                    };
-                    continue;
-                }
-
-                var si = MatchSessionInfo(line);
-                if (si != null)
-                {
-                    playerId = si.Value.playerId;
-                    yield return new LogEvent
-                    {
-                        Type = LogEventType.PlayerIdentified,
-                        LogTime = si.Value.sessionStart,
-                        PlayerId = playerId,
                     };
                     continue;
                 }
@@ -72,7 +56,6 @@ namespace InsightLogParser.Client.Parsing
                     {
                         Type = LogEventType.SessionRestartHandshake,
                         LogTime = restart.Value,
-                        PlayerId = playerId,
                     };
                     continue;
                 }
@@ -84,7 +67,6 @@ namespace InsightLogParser.Client.Parsing
                     {
                         Type = LogEventType.Teleport,
                         Event = null,
-                        PlayerId = playerId,
                         LogTime = teleport.Value.eventTime,
                         Coordinate = new Coordinate(teleport.Value.x, teleport.Value.y, teleport.Value.z),
                     };
@@ -108,7 +90,6 @@ namespace InsightLogParser.Client.Parsing
                     {
                         Type = LogEventType.SessionEnd,
                         LogTime = end.Value,
-                        PlayerId = playerId,
                     };
                     yield break; //This will be the last line in the log so no need to proceed
                 }
@@ -166,23 +147,6 @@ namespace InsightLogParser.Client.Parsing
             if (stampSuccess)
             {
                 return (eventTime, eventName);
-            }
-            return null;
-        }
-
-        private (DateTimeOffset sessionStart, Guid playerId)? MatchSessionInfo(string line)
-        {
-            var result = _playerIdRegex.Match(line);
-            if (!result.Success) return null;
-
-            var timestamp = result.Groups[1].Value;
-            var (stampSuccess, eventTime) = ParseLogDate(timestamp);
-
-            var guidString = result.Groups[2].Value;
-            var guidSuccess = Guid.TryParse(guidString, out var playerGuid);
-            if (stampSuccess && guidSuccess)
-            {
-                return (eventTime, playerGuid);
             }
             return null;
         }
