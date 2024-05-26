@@ -43,7 +43,7 @@ By entering a playerId, apikey and url in the config file, you'll enter "online 
 * Solving a puzzle will notify the server which puzzle was solved and when
 * Opening a puzzlebox or wall puzzle will also notify the server
 * When parsing a puzzle you'll get additional statistics from the server
-  * Puzzles other players running the parser have reported, but you haven't parsed yet
+  * Puzzles other players running the parser have reported, but you haven't solved yet
   * The total number of puzzles other players have reported
 * The zone statistics will be augmented with the above information
 * Ability to upload screenshots linked to a puzzle you've solved
@@ -52,11 +52,12 @@ By entering a playerId, apikey and url in the config file, you'll enter "online 
 Sometimes when a puzzle cycles the puzzles from the old cycle remain in the game world and can be solved. Once reconnected they will not be there anymore. I use the term "stale" to describe such reports. That means a puzzle was reported when the puzzle had cycled after the player connected. They should be treated as "maybe"s
 
 ### So exactly what "data" are you uploading from my computer?
-Only stuff related to the puzzle/game like the puzzle id, the type of puzzle, the zone it was in, the server you're playing on. If you choose to upload screenshots, those will be uploaded together with the "thumbnail" file created by Steam
+Only stuff related to the puzzle/game like the puzzle id, the type of puzzle, the zone it was in, the server you're playing on. If you choose to upload screenshots, those will be uploaded together with the "thumbnail" file created by Steam.
+
 I'm not really interested in anything else you might have on your computer :-)
 
 ### Why do I need an API key for online mode?
-For reported content (puzzle reports, but in the future also screenshots) I want an easy way to purge someone's contributions from the data if they are not playing nice. So I need some form of crude authorization to tag contributions.
+For reported content (puzzle reports, screenshots, ...) I want an easy way to purge someone's contributions from the data if they are not playing nice. So I need some form of crude authorization to tag contributions.
 
 As for getting access to the data... Well since I have to make the authorization anyways I might as well require you to contribute if you want the data. "Earn your keep" so to say
 
