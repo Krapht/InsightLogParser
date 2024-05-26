@@ -83,6 +83,10 @@ internal class ConfigurationManager
 
         allOk &= ValidateBeepFrequency(nameof(Configuration.BeepForAttentionFrequency), config.BeepForAttentionFrequency);
         allOk &= ValidateBeepDuration(nameof(Configuration.BeepForAttentionDuration), config.BeepForAttentionDuration);
+
+        allOk &= ValidateBeepFrequency(nameof(Configuration.MissingScreenshotBeepFrequency), config.MissingScreenshotBeepFrequency);
+        allOk &= ValidateBeepDuration(nameof(Configuration.MissingScreenshotBeepDuration), config.MissingScreenshotBeepDuration);
+
         if (config.BeepForAttentionInterval < Beeper.MinDelay || config.BeepForAttentionInterval > Beeper.MaxDelay)
         {
             _messageWriter.WriteInitLine($"Configuration invalid: {nameof(Configuration.BeepForAttentionInterval)} must be between {Beeper.MinDelay} and {Beeper.MaxDelay} (inclusive)", ConsoleColor.Red);

@@ -98,8 +98,15 @@ internal class CetusClient : ICetusClient
     public async Task<SeenResponse?> PostSeenAsync(PlayerReport request)
     {
         await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
-        _messageWriter.WriteDebug($"CETUS: Posting seen");
+        _messageWriter.WriteDebug("CETUS: Posting seen");
         return await MakePostAsync<SeenResponse, PlayerReport>("api/v1/puzzle/seen", request).ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    public async Task<ScreenshotResponse?> PostScreenshotAsync(Screenshot screenshot)
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug("CETUS: Posting screenshot");
+        return await MakePostAsync<ScreenshotResponse?, Screenshot>("api/v1/screenshots", screenshot).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
     private async Task<TResponse?> MakePostAsync<TResponse, TRequest>(string requestUri, TRequest request, bool isRetry = false)

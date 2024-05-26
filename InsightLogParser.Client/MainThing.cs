@@ -1,6 +1,7 @@
 ﻿using InsightLogParser.Client.Cetus;
 using InsightLogParser.Client.Menu;
 using InsightLogParser.Client.Parsing;
+using InsightLogParser.Client.Screenshots;
 using InsightLogParser.Common;
 using InsightLogParser.Common.PuzzleParser;
 using InsightLogParser.Common.World;
@@ -19,6 +20,7 @@ public class MainThing
     private ParsedDatabase _db = null!;
     private ICetusClient _apiClient = null!;
     private readonly TimeTools _timeTools;
+    private ScreenshotMonitor? _screenshotMonitor = null;
 
     public MainThing(CancellationToken forcedExitToken)
     {
@@ -55,6 +57,23 @@ public class MainThing
         _messageWriter.WriteInitLine("Poking spider", ConsoleColor.Green);
         var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler);
 
+        //Screenshots only makes sense in online mode
+        if (spider.IsOnline() && configuration.MonitorScreenshots)
+        {
+            var screenshotManager = new ScreenshotManager(_puzzleHandler, _messageWriter, computer);
+            spider.SetScreenshotManager(screenshotManager);
+            var screenshotFolder = computer.GetScreenshotFolder();
+            if (!Directory.Exists(screenshotFolder))
+            {
+                _messageWriter.WriteInitLine($"Screenshot folder '{screenshotFolder}' does not exist", ConsoleColor.Red);
+            }
+            else
+            {
+                _messageWriter.WriteInitLine($"Monitoring screenshot folder '{screenshotFolder}'", ConsoleColor.Green);
+                _screenshotMonitor = new ScreenshotMonitor(screenshotFolder, screenshotManager);
+            }
+        }
+
         _messageWriter.WriteInitLine($"Using '{logFilePath}' as the log file", ConsoleColor.Green);
         _messageWriter.WriteInitLine("Starting log processor", ConsoleColor.Green);
         var processor = new LogProcessor(_messageWriter, computer, _forcedExitToken, spider);
@@ -62,7 +81,7 @@ public class MainThing
 
         _messageWriter.WriteWelcome();
 
-        var menu = new MenuHandler(_forcedExitToken, _messageWriter, spider);
+        var menu = new MenuHandler(_forcedExitToken, _messageWriter, spider, configuration, computer);
         await menu.StartAsync().ConfigureAwait(ConfigureAwaitOptions.None);
 
         //Fully started
@@ -70,6 +89,8 @@ public class MainThing
         await menu.WaitForMenuClosed().ConfigureAwait(ConfigureAwaitOptions.None);
 
         //Teardown
+        _screenshotMonitor?.Dispose();
+
         await cycleTimer.StopAsync();
         await _db.StopAsync();
         await processor.StopAsync();

@@ -202,14 +202,24 @@ namespace InsightLogParser.Client
             }
         }
 
-        public void WriteCetusParsed(int sightingsCount, int unsolvedFresh, int unsolvedStale)
+        public void WriteCetusParsed(int sightingsCount, int unsolvedFresh, int unsolvedStale, IReadOnlyList<(string CategoryName, bool IsRequested)>? screenshotCategories)
         {
             lock (_lock)
             {
                 Console.ForegroundColor = ConsoleColor.DarkCyan;
                 Console.Write("[Cetus]: ");
                 Console.ResetColor();
-                Console.WriteLine($"Unsolved: {unsolvedFresh}, Stale: {unsolvedStale}, TotalSeen: {sightingsCount}");
+                Console.Write($"Unsolved: {unsolvedFresh}, Stale: {unsolvedStale}, TotalSeen: {sightingsCount}");
+                if (screenshotCategories != null)
+                {
+                    Console.Write(", Has Screenshot: ");
+                    foreach (var sc in screenshotCategories)
+                    {
+                        Console.ForegroundColor = sc.IsRequested ? ConsoleColor.Red : ConsoleColor.Green;
+                        Console.Write($"{sc.CategoryName} ");
+                    }
+                }
+                Console.ResetColor();
             }
         }
 
@@ -258,6 +268,30 @@ namespace InsightLogParser.Client
                     Console.WriteLine($"Last solved {ago.Days} days {ago.Hours} hours and {ago.Minutes} minutes ago");
                     Console.ResetColor();
                 }
+            }
+        }
+
+        public void WriteCetusOpened(List<(string CategoryName, bool IsRequested)> needsScreenshot)
+        {
+            lock (_lock)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                Console.Write("[Cetus]: ");
+                Console.ResetColor();
+                Console.Write("Has Screenshots: ");
+                foreach (var sc in needsScreenshot)
+                {
+                    Console.ForegroundColor = sc.IsRequested ? ConsoleColor.Red : ConsoleColor.Green;
+                    Console.Write($"{sc.CategoryName} ");
+                }
+                Console.ResetColor();
+            }
+        }
+
+        public void WriteEndOpened()
+        {
+            lock (_lock)
+            {
                 Console.WriteLine();
             }
         }
@@ -397,6 +431,32 @@ namespace InsightLogParser.Client
                         firstServer = false;
                     }
                 }
+            }
+        }
+
+        public void ConfirmDelete(string path)
+        {
+            lock (_lock)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Are you sure you wish to permanently DELETE:");
+                Console.WriteLine($"{path}");
+                Console.WriteLine("and its thumbnail? Press [y] to confirm or any other key to cancel");
+                Console.ResetColor();
+            }
+        }
+
+        public void ConfirmScreenshotCleanup()
+        {
+            lock (_lock)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("The steam screenshots.vdf file is a steam file that contains screenshot metainformation from all steam games");
+                Console.WriteLine("This operation will modify that file to remove any entries to Insight screenshots that no longer exists");
+                Console.WriteLine("Please be aware that just because it works for me does not mean it will work for you");
+                Console.WriteLine("*** For this to work, steam must be fully closed down ***");
+                Console.WriteLine("At your own risk, press [y] three times to proceed or any other key to cancel");
+                Console.ResetColor();
             }
         }
     }

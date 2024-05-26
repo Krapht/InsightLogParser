@@ -44,31 +44,31 @@ internal class StatisticsMenu : IMenu
         return true;
     }
 
-    public async Task<bool> HandleOptionAsync(char keyChar)
+    public async Task<MenuResult> HandleOptionAsync(char keyChar)
     {
         switch (keyChar)
         {
             case 'p':
-                return await HandleSightings(true);
+                return await HandleSightings(true) ? MenuResult.Ok : MenuResult.NotValidOption;
             case 'P':
-                return await HandleSightings(false);
+                return await HandleSightings(false) ? MenuResult.Ok : MenuResult.NotValidOption;
             case '1':
                 await _spider.WriteStatistics(PuzzleZone.VerdantGlen);
-                return true;
+                return MenuResult.Ok;
             case '2':
                 await _spider.WriteStatistics(PuzzleZone.LucentWaters);
-                return true;
+                return MenuResult.Ok;
             case '3':
                 await _spider.WriteStatistics(PuzzleZone.AutumnFalls);
-                return true;
+                return MenuResult.Ok;
             case '4':
                 await _spider.WriteStatistics(PuzzleZone.ShadyWildwood);
-                return true;
+                return MenuResult.Ok;
             case '5':
                 await _spider.WriteStatistics(PuzzleZone.SereneDeluge);
-                return true;
+                return MenuResult.Ok;
             default:
-                return false;
+                return MenuResult.NotValidOption;
         }
     }
 }
