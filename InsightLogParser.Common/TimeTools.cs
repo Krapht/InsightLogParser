@@ -42,4 +42,12 @@ public class TimeTools
     {
         return _timeProvider.GetUtcNow() - agoTime;
     }
+
+    public string FormatTimeSince(DateTimeOffset? agoTime, string noDateVersion, bool useShort)
+    {
+        if (agoTime == null) return noDateVersion;
+        if (agoTime.Value == default) return noDateVersion;
+
+        return (_timeProvider.GetUtcNow() - agoTime.Value).ToHHMMSS(useShort);
+    }
 }

@@ -55,7 +55,7 @@ public class MainThing
         await InitializeCetusClientAsync(configuration);
 
         _messageWriter.WriteInitLine("Poking spider", ConsoleColor.Green);
-        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler);
+        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler, computer);
 
         //Screenshots only makes sense in online mode
         if (spider.IsOnline() && configuration.MonitorScreenshots)

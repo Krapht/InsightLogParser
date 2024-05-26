@@ -10,6 +10,7 @@ namespace InsightLogParser.Client.Parsing
     internal class LogParser
     {
         private readonly Action<string> _logLineCallback;
+        private readonly MessageWriter _messageWriter;
         private const string TimestampPattern = @"^\[(.{19}):\d{3}\]";
         private static readonly Regex _prepRegex = new Regex(TimestampPattern + @".*About to record BhvrAnalytics event named \""(.*)\""", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex _eventRegex = new Regex(TimestampPattern + @".*Attribute ""data"" has value \""(.*)\""", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
@@ -18,9 +19,10 @@ namespace InsightLogParser.Client.Parsing
         private static readonly Regex _teleportRegex = new Regex(TimestampPattern + @".*Teleporting to X=([-0-9.]+) Y=([-0-9.]+) Z=([-0-9.]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex _joinedServer = new Regex(TimestampPattern + @".*UPendingNetGame::SendInitialJoin.*RemoteAddr: ([0-9\.:]+), Name", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
 
-        public LogParser(Action<string> logLineCallback)
+        public LogParser(Action<string> logLineCallback, MessageWriter messageWriter)
         {
             _logLineCallback = logLineCallback;
+            _messageWriter = messageWriter;
         }
 
         public async IAsyncEnumerable<LogEvent> LogEvents(LogReader reader, [EnumeratorCancellation] CancellationToken token = default)
@@ -125,8 +127,17 @@ namespace InsightLogParser.Client.Parsing
             var (stampSuccess, eventTime) = ParseLogDate(timestamp);
 
             var json = result.Groups[2].Value;
-            var parsedEvent = JsonSerializer.Deserialize<ParsedLogEvent>(json);
-            if (parsedEvent == null) return null;
+            ParsedLogEvent? parsedEvent;
+            try
+            {
+                parsedEvent = JsonSerializer.Deserialize<ParsedLogEvent>(json);
+                if (parsedEvent == null) return null;
+            }
+            catch (Exception e)
+            {
+                _messageWriter.WriteError($"Failed to deserialize event: {line}");
+                return null;
+            }
             if (string.IsNullOrWhiteSpace(parsedEvent.EventType) && lastEvent != null)
             {
                 parsedEvent.EventType = lastEvent;

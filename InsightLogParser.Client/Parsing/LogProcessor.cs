@@ -94,7 +94,7 @@ namespace InsightLogParser.Client.Parsing
                 }
 
                 //Game is running now (or something else is tinkering with the log file)
-                var parser = new LogParser(_spider.WriteRawLogLine);
+                var parser = new LogParser(_spider.WriteRawLogLine, _messageWriter);
                 using (var reader = new LogReader(logfilePath))
                 {
                     await foreach (var logEvent in parser.LogEvents(reader, _stopTokenSource.Token).ConfigureAwait(false))

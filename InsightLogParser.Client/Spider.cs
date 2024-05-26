@@ -18,6 +18,7 @@ namespace InsightLogParser.Client
         private readonly ICetusClient _cetusClient;
         private readonly TimeTools _timeTools;
         private readonly GamePuzzleHandler _gamePuzzleHandler;
+        private readonly UserComputer _computer;
         private ScreenshotManager? _screenshotManager = null;
 
         //State
@@ -30,6 +31,7 @@ namespace InsightLogParser.Client
             , ICetusClient cetusClient
             , TimeTools timeTools
             , GamePuzzleHandler gamePuzzleHandler
+            , UserComputer computer
             )
         {
             _messageWriter = messageWriter;
@@ -39,6 +41,7 @@ namespace InsightLogParser.Client
             _cetusClient = cetusClient;
             _timeTools = timeTools;
             _gamePuzzleHandler = gamePuzzleHandler;
+            _computer = computer;
         }
 
         public void SetScreenshotManager(ScreenshotManager screenshotManager)  { _screenshotManager = screenshotManager; }
@@ -376,5 +379,10 @@ namespace InsightLogParser.Client
         }
 
 
+        public async Task OpenCetusWebAsync()
+        {
+            var code = await _cetusClient.GetSigninCodeAsync();
+            _computer.LaunchBrowser($"{_configuration.CetusUri}/account/signin?code={code}");
+        }
     }
 }
