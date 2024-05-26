@@ -37,7 +37,7 @@ internal class RootMenu : IMenu
                 _menuHandler.EnterMenu(new StatisticsMenu(_menuHandler, _spider));
                 return Task.FromResult(MenuResult.Ok);
             case 'a':
-                _menuHandler.EnterMenu(new AdvancedMenu(_menuHandler, _computer, _writer));
+                _menuHandler.EnterMenu(new AdvancedMenu(_menuHandler, _computer, _writer, _spider));
                 return Task.FromResult(MenuResult.Ok);
             default:
                 return Task.FromResult(MenuResult.NotValidOption);

@@ -311,4 +311,15 @@ internal class UserComputer
 
         return removedFiles;
     }
+
+    public void LaunchBrowser(string httpsUrl)
+    {
+        if (!httpsUrl.StartsWith("https://")) throw new ArgumentException("Not a valid https URL");
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = httpsUrl,
+            UseShellExecute = true,
+        });
+    }
+
 }

@@ -17,4 +17,5 @@ internal interface ICetusClient : IDisposable
     Task<SeenResponse?> PostSeenAsync(PlayerReport request);
     Task<SolvedResponse?> PostSolvedAsync(PlayerReport request);
     Task<ScreenshotResponse?> PostScreenshotAsync(Screenshot screenshot);
+    Task<string?> GetSigninCodeAsync();
 }

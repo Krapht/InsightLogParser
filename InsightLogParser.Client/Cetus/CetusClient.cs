@@ -109,6 +109,14 @@ internal class CetusClient : ICetusClient
         return await MakePostAsync<ScreenshotResponse?, Screenshot>("api/v1/screenshots", screenshot).ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
+    public async Task<string?> GetSigninCodeAsync()
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug("CETUS: Fetching sign-in code");
+        var reply = await MakeGetAsync<AuthResponse?>("api/v1/auth/webcode");
+        return reply?.Code;
+    }
+
     private async Task<TResponse?> MakePostAsync<TResponse, TRequest>(string requestUri, TRequest request, bool isRetry = false)
     {
         try
