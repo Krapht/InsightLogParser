@@ -3,13 +3,17 @@ namespace InsightLogParser.Client;
 
 public class Configuration
 {
-    public static readonly int CurrentConfigurationVersion = 1;
+    public static readonly int CurrentConfigurationVersion = 2;
 
     public int ConfigVersion { get; set; } = CurrentConfigurationVersion;
 
     public string? ForceLogFolder { get; set; }
     public string? ForceGameRootFolder { get; set; }
     public string? ForcedParsedDatabasePath { get; set; }
+    public string? ForceScreenshotFolder { get; set; }
+    public bool MonitorScreenshots { get; set; } = true;
+    public bool ConfirmScreenshotDelete { get; set; } = true;
+    public bool DeleteOnQuickUpload { get; set; } = false;
 
     public string? CetusApiKey { get; set; }
     public Guid? CetusPlayerId { get; set; }
@@ -32,4 +36,7 @@ public class Configuration
     public int BeepForAttentionDuration { get; set; } = 200;
     public int BeepForAttentionCount { get; set; } = 3;
     public int BeepForAttentionInterval { get; set; } = 200;
+    public bool BeepForMissingScreenshot { get; set; }
+    public int MissingScreenshotBeepFrequency { get; set; } = 440;
+    public int MissingScreenshotBeepDuration { get; set; } = 150;
 }

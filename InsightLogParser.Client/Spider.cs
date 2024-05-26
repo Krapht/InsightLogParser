@@ -1,8 +1,10 @@
 ﻿
 using InsightLogParser.Client.Cetus;
+using InsightLogParser.Client.Screenshots;
 using InsightLogParser.Common;
 using InsightLogParser.Common.ApiModels;
 using InsightLogParser.Common.PuzzleParser;
+using InsightLogParser.Common.Screenshots;
 using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Client
@@ -16,13 +18,11 @@ namespace InsightLogParser.Client
         private readonly ICetusClient _cetusClient;
         private readonly TimeTools _timeTools;
         private readonly GamePuzzleHandler _gamePuzzleHandler;
+        private ScreenshotManager? _screenshotManager = null;
 
         //State
         private DateTimeOffset? _sessionStart;
         private string? _serverAddress;
-        private string? _lastScreenshot = null;
-        private int? _lastSolvedPuzzle = null;
-        private Action<string, string, int> _screenshotCallback = null;
 
         public Spider(MessageWriter messageWriter
             , Configuration configuration
@@ -40,6 +40,8 @@ namespace InsightLogParser.Client
             _timeTools = timeTools;
             _gamePuzzleHandler = gamePuzzleHandler;
         }
+
+        public void SetScreenshotManager(ScreenshotManager screenshotManager)  { _screenshotManager = screenshotManager; }
 
         public void StartSession(DateTimeOffset timestamp)
         {
@@ -118,11 +120,20 @@ namespace InsightLogParser.Client
                 var unsolved = cetusInfo.Sightings.Join(unsolvedIds, x => x.PuzzleId, x => x, (sighting, _) => sighting)
                     .ToList();
 
-                _messageWriter.WriteCetusParsed(sightingsCount, unsolved.Count(x => x.IsFresh), unsolved.Count(x => !x.IsFresh));
+                var needsScreenshots = _screenshotManager?.GetScreenshotStatus(type, true, cetusInfo.ScreenshotCategories) ?? [];
+                var screenShotStrings = needsScreenshots
+                    .Select(x => (CategoryName: ScreenshotManager.GetCategoryName(x.Category), IsRequested: x.IsMissing))
+                    .ToList();
+                _messageWriter.WriteCetusParsed(sightingsCount, unsolved.Count(x => x.IsFresh), unsolved.Count(x => !x.IsFresh), screenShotStrings);
+                if (screenShotStrings.Any(x => x.IsRequested))
+                {
+                    _beeper.BeepForMissingScreenshot();
+                }
             }
 
             _messageWriter.WriteEndSolved();
 
+            _screenshotManager?.SetLastPuzzle(puzzleId, true);
         }
 
         public async Task OpenedAsync(DateTimeOffset timestamp, int puzzleId, PuzzleZone zone, PuzzleType type, short? difficulty)
@@ -156,7 +167,22 @@ namespace InsightLogParser.Client
             {
                 _beeper.BeepForOpeningSolvedPuzzle();
             }
-            await cetusTask.ConfigureAwait(ConfigureAwaitOptions.None);
+            var seenResponse = await cetusTask.ConfigureAwait(ConfigureAwaitOptions.None);
+            if (seenResponse != null && _screenshotManager != null)
+            {
+                var screenshotStatus = _screenshotManager.GetScreenshotStatus(type, false, seenResponse.Screenshots);
+                var statusStrings = screenshotStatus
+                    .Select(x => (CategoryName: ScreenshotManager.GetCategoryName(x.Category), IsRequested: x.IsMissing))
+                    .ToList();
+
+                _messageWriter.WriteCetusOpened(statusStrings);
+                if (statusStrings.Any(x => x.IsRequested))
+                {
+                    _beeper.BeepForMissingScreenshot();
+                }
+            }
+            _messageWriter.WriteEndOpened();
+            _screenshotManager?.SetLastPuzzle(puzzleId, false);
         }
 
         private bool ShouldHandlePuzzle(int puzzleId, PuzzleZone zone, PuzzleType type)
@@ -306,5 +332,49 @@ namespace InsightLogParser.Client
 
             _messageWriter.WriteSightings(zoneName, puzzleName, entries, _serverAddress!);
         }
+
+        public async Task<bool> UploadScreenshotAsync(CapturedScreenshot capturedScreenshot, ScreenshotCategory screenshotCategory)
+        {
+            var screenshotPath = capturedScreenshot.ScreenshotPath;
+            var puzzleId = capturedScreenshot.PuzzleId;
+
+            if (!File.Exists(screenshotPath)) return false;
+
+            var fileTask = File.ReadAllBytesAsync(screenshotPath);
+            var folder = Path.GetDirectoryName(screenshotPath) ?? ".";
+            var fileName = Path.GetFileName(screenshotPath);
+            var thumbPath = Path.Combine(folder, "thumbnails");
+            var thumbFile = Path.Combine(thumbPath, fileName);
+            var thumbBytes = File.Exists(thumbFile)
+                ? await File.ReadAllBytesAsync(thumbFile).ConfigureAwait(ConfigureAwaitOptions.None)
+                : null;
+            var screenshotBytes = await fileTask.ConfigureAwait(ConfigureAwaitOptions.None);
+
+            var screenshot = new Screenshot()
+            {
+                PuzzleId = puzzleId,
+                Category = screenshotCategory,
+                ScreenshotBytes = screenshotBytes,
+                ThumbBytes = thumbBytes,
+            };
+
+            var result = await _cetusClient.PostScreenshotAsync(screenshot).ConfigureAwait(ConfigureAwaitOptions.None);
+
+            var success = result != null;
+
+            if (success)
+            {
+                _screenshotManager?.FlagScreenshotAsHandled();
+            }
+
+            return success ;
+        }
+
+        public ScreenshotManager? GetScreenshotManager()
+        {
+            return _screenshotManager;
+        }
+
+
     }
 }

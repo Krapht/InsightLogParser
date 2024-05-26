@@ -1,5 +1,7 @@
 ﻿using InsightLogParser.Common.World;
 using System.Linq;
+using InsightLogParser.Client.Screenshots;
+using InsightLogParser.Common.Screenshots;
 
 namespace InsightLogParser.Client.Menu
 {
@@ -7,20 +9,40 @@ namespace InsightLogParser.Client.Menu
     {
         private readonly MessageWriter _messageWriter;
         private readonly Spider _spider;
+        private readonly Configuration _configuration;
         private readonly TaskCompletionSource _tcs;
         private readonly CancellationTokenSource _cts;
         private readonly Stack<IMenu> _menuStack = new();
 
         private Task _menuTask = Task.CompletedTask;
 
-        public MenuHandler(CancellationToken forcedExitToken, MessageWriter messageWriter, Spider spider)
+        public MenuHandler(CancellationToken forcedExitToken, MessageWriter messageWriter, Spider spider, Configuration configuration, UserComputer computer)
         {
             _messageWriter = messageWriter;
             _spider = spider;
+            _configuration = configuration;
             _cts = CancellationTokenSource.CreateLinkedTokenSource(forcedExitToken);
             _tcs = new TaskCompletionSource();
+            _spider.GetScreenshotManager()?.SetCallback(ScreenshotCallback);
 
-            _menuStack.Push(new RootMenu(this, spider));
+            _menuStack.Push(new RootMenu(this, spider, messageWriter, computer));
+        }
+
+        private void ScreenshotCallback(CapturedScreenshot screenshot)
+        {
+            if (!_menuStack.TryPeek(out var top)) return;
+
+            //Check if screenshots are supported for the puzzle type
+            if (!ScreenshotManager.GetScreenshotCategories(screenshot.PuzzleType, screenshot.IsSolved).Any()) return;
+
+            if (!top.IsPersistent)
+            {
+                //Remove any non-persistent menus before adding the screenshot one
+                _menuStack.Pop();
+            }
+            var newMenu = new ScreenshotMenu(_spider, _messageWriter, _configuration, screenshot);
+            _messageWriter.WriteMenu(newMenu.MenuOptions);
+            _menuStack.Push(newMenu);
         }
 
         private async Task RunMenuAsync()
@@ -52,17 +74,41 @@ namespace InsightLogParser.Client.Menu
                     _messageWriter.WriteMenu(_menuStack.Peek().MenuOptions);
                     continue;
                 }
+
                 if (key.Key == ConsoleKey.H)
                 {
                     _messageWriter.WriteMenu(_menuStack.Peek().MenuOptions);
                     continue;
                 }
-                if (! await _menuStack.Peek().HandleOptionAsync(key.KeyChar).ConfigureAwait(ConfigureAwaitOptions.None))
+
+                var menuResult = await _menuStack.Peek().HandleOptionAsync(key.KeyChar).ConfigureAwait(ConfigureAwaitOptions.None);
+                switch (menuResult)
                 {
-                    _messageWriter.WriteLine($"Unknown command '{key.KeyChar}', press [h] to see available commands");
+                    case MenuResult.Ok:
+                        break;
+                    case MenuResult.PrintMenu:
+                        WriteCurrentMenu();
+                        break;
+                    case MenuResult.CloseMenu:
+                        _menuStack.Pop();
+                        WriteCurrentMenu();
+                        break;
+                    case MenuResult.NotValidOption:
+                    default:
+                        _messageWriter.WriteLine($"Unknown command '{key.KeyChar}', press [h] to see available commands");
+                        break;
                 }
             }
         }
+
+        private void WriteCurrentMenu()
+        {
+            if (_menuStack.TryPeek(out var top))
+            {
+                _messageWriter.WriteMenu(top.MenuOptions);
+            }
+        }
+
 
         public Task StartAsync()
         {

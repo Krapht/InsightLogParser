@@ -13,6 +13,11 @@ namespace InsightLogParser.Client.Cetus
             return Task.FromResult<SolvedResponse?>(null);
         }
 
+        public Task<ScreenshotResponse?> PostScreenshotAsync(Screenshot screenshot)
+        {
+            return Task.FromResult<ScreenshotResponse?>(null);
+        }
+
         public Task<SeenResponse?> PostSeenAsync(PlayerReport request)
         {
             return Task.FromResult<SeenResponse?>(null);

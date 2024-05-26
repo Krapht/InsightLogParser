@@ -16,4 +16,5 @@ internal interface ICetusClient : IDisposable
     //Post operations
     Task<SeenResponse?> PostSeenAsync(PlayerReport request);
     Task<SolvedResponse?> PostSolvedAsync(PlayerReport request);
+    Task<ScreenshotResponse?> PostScreenshotAsync(Screenshot screenshot);
 }
