@@ -99,6 +99,15 @@ internal class ConfigurationManager
             allOk = false;
         }
 
+        if (!string.IsNullOrEmpty(config.CetusUri))
+        {
+            if (!config.CetusUri.StartsWith("https://"))
+            {
+                allOk = false;
+                _messageWriter.WriteInitLine("Configuration invalid: CetusUri must start with 'https://'", ConsoleColor.Red);
+            }
+        }
+
         if (allOk)
         {
             _messageWriter.WriteInitLine($"Configuration validated ok", ConsoleColor.Green);

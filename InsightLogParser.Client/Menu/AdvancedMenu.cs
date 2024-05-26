@@ -22,7 +22,10 @@ internal class AdvancedMenu : IMenu
         get
         {
             yield return (null, "Advanced or risky operations. Press [h] to display this menu again and backspace to back");
-            yield return ('w', "Log-in to cetus web ui");
+            if (_spider.IsOnline())
+            {
+                yield return ('w', "Log-in to cetus web ui");
+            }
             yield return ('c', "Cleanup steam screenshot.vdf file (at your own risk)");
         }
     }
@@ -32,7 +35,7 @@ internal class AdvancedMenu : IMenu
         switch (keyChar)
         {
             case 'w':
-                await _spider.OpenCetusWebAsync();
+                await _spider.OpenCetusWebAsync().ConfigureAwait(ConfigureAwaitOptions.None);
                 return MenuResult.Ok;
             case 'c':
                 ConfirmSteamScreenshotCleanup();

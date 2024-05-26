@@ -31,9 +31,6 @@ internal class CetusClient : ICetusClient
     public CetusClient(string baseUri, MessageWriter messageWriter)
     {
         _messageWriter = messageWriter;
-        const string httpsPrefix = "https://";
-
-        if (!baseUri.StartsWith(httpsPrefix)) baseUri = $"{httpsPrefix}{baseUri}";
         _httpClient = new HttpClient
         {
             BaseAddress = new Uri(baseUri)

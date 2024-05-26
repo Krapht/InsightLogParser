@@ -213,7 +213,7 @@ public class MainThing
 
     private async Task InitializeCetusClientAsync(Configuration configuration)
     {
-        if (string.IsNullOrWhiteSpace(configuration.CetusUri) || string.IsNullOrWhiteSpace(configuration.CetusApiKey) || configuration.CetusPlayerId == null)
+        if (string.IsNullOrWhiteSpace(configuration.CetusUri) || string.IsNullOrWhiteSpace(configuration.CetusApiKey) || configuration.CetusPlayerId == null || !configuration.CetusUri.StartsWith("https://"))
         {
             _messageWriter.WriteInitLine("Cetus configuration missing, staying in offline mode", ConsoleColor.Green);
             _apiClient = new DummyCetusClient();

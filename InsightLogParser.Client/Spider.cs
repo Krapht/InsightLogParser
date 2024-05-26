@@ -382,7 +382,14 @@ namespace InsightLogParser.Client
         public async Task OpenCetusWebAsync()
         {
             var code = await _cetusClient.GetSigninCodeAsync();
-            _computer.LaunchBrowser($"{_configuration.CetusUri}/account/signin?code={code}");
+            try
+            {
+                _computer.LaunchBrowser($"{_configuration.CetusUri}/account/signin?code={code}");
+            }
+            catch (Exception e)
+            {
+                _messageWriter.WriteError($"Failed to launch browser: {e}");
+            }
         }
     }
 }
