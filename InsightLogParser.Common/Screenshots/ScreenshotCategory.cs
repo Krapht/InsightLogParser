@@ -6,7 +6,7 @@ public enum ScreenshotCategory
     Other = 0,
 
     /// <summary>
-    /// Applicable to LogicGrid, PatternGrid, MatchThree, RollingBlock, PhasicDial, MusicGrid, MemoryGrid, MorphicFractal, ShiftingMosaic
+    /// Applicable to LogicGrid, PatternGrid, MatchThree, RollingBlock, PhasicDial, MorphicFractal, ShiftingMosaic
     /// </summary>
     Initial = 1,
 

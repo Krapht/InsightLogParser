@@ -119,7 +119,7 @@ namespace InsightLogParser.Client
                 _messageWriter.WriteDebug("Got result from Cetus");
                 var sightingsCount = cetusInfo.Sightings.Length;
                 var solved = _db.GetSolvedIds(zone, type);
-                var unsolvedIds = solved.Except(cetusInfo.Sightings.Select(x => x.PuzzleId));
+                var unsolvedIds = cetusInfo.Sightings.Select(x => x.PuzzleId).Except(solved);
                 var unsolved = cetusInfo.Sightings.Join(unsolvedIds, x => x.PuzzleId, x => x, (sighting, _) => sighting)
                     .ToList();
 
@@ -284,7 +284,7 @@ namespace InsightLogParser.Client
                     {
                         var sightingsCount = stat.Sightings.Count;
                         var solved = _db.GetSolvedIds(zone, stat.PuzzleType);
-                        var unsolvedIds = solved.Except(stat.Sightings.Select(s => s.PuzzleId));
+                        var unsolvedIds = stat.Sightings.Select(s => s.PuzzleId).Except(solved);
                         var unsolved = stat.Sightings.Join(unsolvedIds, x => x.PuzzleId, x => x, (sighting, _) => sighting)
                             .ToList();
                         return new MessageWriter.CetusStatistics
