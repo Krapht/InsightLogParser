@@ -67,6 +67,7 @@ internal class ScreenshotManager
     public void DeleteScreenshot(string path)
     {
         _userComputer.DeleteScreenshot(path);
+        FlagScreenshotAsHandled();
     }
 
     public static string  GetCategoryName(ScreenshotCategory category)
