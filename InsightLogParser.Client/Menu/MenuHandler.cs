@@ -167,9 +167,12 @@ namespace InsightLogParser.Client.Menu
                 yield return ('6', "Hidden Archways");
                 yield return ('7', "Hidden Pentads");
                 yield return ('8', "Wandering Echoes");
-                yield return ('8', "Glide Rings");
+                yield return ('9', "Glide Rings");
                 yield return ('a', "Flow Orbs");
-                yield return ('a', "Shy Auras");
+                yield return ('b', "Shy Auras");
+                yield return ('c', "Rolling Blocks");
+                yield return ('d', "Sentinel Stones");
+                yield return ('e', "Crystal Labyrinths");
             }
         }
 
@@ -205,6 +208,9 @@ namespace InsightLogParser.Client.Menu
                 case '9': return PuzzleType.GlideRings;
                 case 'a': return PuzzleType.FlowOrbs;
                 case 'b': return PuzzleType.ShyAura;
+                case 'c': return PuzzleType.RollingBlock;
+                case 'd': return PuzzleType.SentinelStones;
+                case 'e': return PuzzleType.CrystalLabyrinth;
                 default: return PuzzleType.Unknown;
             }
         }
