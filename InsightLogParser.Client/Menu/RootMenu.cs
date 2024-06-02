@@ -15,7 +15,8 @@ internal class RootMenu : IMenu
         ('h', "Show this list again"),
         ('c', "--> Configuration [WIP]"),
         ('s', "--> Statistics"),
-        ('a', "--> Advanced or risky")
+        ('a', "--> Advanced or risky"),
+        ('C', "--> Che....ese (online only)"),
     };
 
     public RootMenu(MenuHandler menuHandler, Spider spider, MessageWriter writer, UserComputer computer)
@@ -38,6 +39,9 @@ internal class RootMenu : IMenu
                 return Task.FromResult(MenuResult.Ok);
             case 'a':
                 _menuHandler.EnterMenu(new AdvancedMenu(_menuHandler, _computer, _writer, _spider));
+                return Task.FromResult(MenuResult.Ok);
+            case 'C':
+                _menuHandler.EnterMenu(new CheeseMenu(_spider));
                 return Task.FromResult(MenuResult.Ok);
             default:
                 return Task.FromResult(MenuResult.NotValidOption);

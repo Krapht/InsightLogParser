@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics;
 using InsightLogParser.Client.Cetus;
 using InsightLogParser.Client.Screenshots;
 using InsightLogParser.Common;
@@ -24,6 +25,7 @@ namespace InsightLogParser.Client
         //State
         private DateTimeOffset? _sessionStart;
         private string? _serverAddress;
+        private int? _lastOpenedWithSolution;
 
         public Spider(MessageWriter messageWriter
             , Configuration configuration
@@ -183,6 +185,8 @@ namespace InsightLogParser.Client
                 {
                     _beeper.BeepForMissingScreenshot();
                 }
+
+                _lastOpenedWithSolution = seenResponse.Screenshots.Any(x => x == ScreenshotCategory.Solved) ? puzzleId : default(int?);
             }
             _messageWriter.WriteEndOpened();
             _screenshotManager?.SetLastPuzzle(puzzleId, false);
@@ -385,6 +389,23 @@ namespace InsightLogParser.Client
             try
             {
                 _computer.LaunchBrowser($"{_configuration.CetusUri}/account/signin?code={code}");
+            }
+            catch (Exception e)
+            {
+                _messageWriter.WriteError($"Failed to launch browser: {e}");
+            }
+        }
+
+        public void OpenSolutionScreenshot()
+        {
+            if (_lastOpenedWithSolution == null)
+            {
+                _messageWriter.WriteError("Last opened puzzle did not have a solved screenshot");
+                return;
+            }
+            try
+            {
+                _computer.LaunchBrowser($"{_configuration.CetusUri}/goto/solution/{_lastOpenedWithSolution}");
             }
             catch (Exception e)
             {
