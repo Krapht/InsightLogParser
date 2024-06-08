@@ -23,6 +23,17 @@ namespace InsightLogParser.Client
             public int? Expected { get; set; }
         }
 
+        internal class DistanceModel
+        {
+            public required double Distance { get; set; }
+            public required int PuzzleId { get; set; }
+            public required string PuzzleName { get; set; }
+            public required bool IsSolved { get; set; }
+
+            public bool? Seen { get; set; }
+            public bool? RequestsScreenshot { get; set; }
+        }
+
         private readonly object _lock = new();
         internal Func<bool> ShouldShowDebug { get; set; } = () => false;
 
@@ -458,6 +469,70 @@ namespace InsightLogParser.Client
                 Console.WriteLine("At your own risk, press [y] three times to proceed or any other key to cancel");
                 Console.ResetColor();
             }
+        }
+
+        public void WriteClosest(IEnumerable<DistanceModel> distanceModels, bool containsCetusInfo)
+        {
+            lock (_lock)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Closest puzzles");
+
+                //Header
+                Console.Write("Distance");
+                Console.Write(" | ");
+                Console.Write("Puzzle Id");
+                Console.Write(" | ");
+                Console.Write("Puzzle Type".PadLeft(18));
+                Console.Write(" | ");
+                Console.Write("Solved");
+                if (containsCetusInfo)
+                {
+                    Console.Write(" | ");
+                    Console.Write("Seen");
+                    Console.Write(" | ");
+                    Console.Write("Screenshot Requested");
+                }
+                Console.WriteLine();
+                foreach (var worldPuzzle in distanceModels)
+                {
+                    Console.Write($"{worldPuzzle.Distance/100:####}m".PadLeft(8));
+                    Console.Write(" | ");
+                    Console.Write($"{worldPuzzle.PuzzleId}".PadLeft(9));
+                    Console.Write(" | ");
+                    Console.Write($"{worldPuzzle.PuzzleName}".PadLeft(18));
+                    Console.Write(" | ");
+                    WriteYesNo(worldPuzzle.IsSolved, 6, false);
+
+                    if (containsCetusInfo)
+                    {
+                        Console.Write(" | ");
+                        WriteYesNo(worldPuzzle.Seen, 4, false);
+                        Console.Write(" | ");
+                        WriteYesNo(worldPuzzle.RequestsScreenshot, 0, true);
+                    }
+                    Console.WriteLine();
+                }
+            }
+        }
+
+        private void WriteYesNo(bool? value, int padding, bool invertColors)
+        {
+            if (value == null)
+            {
+                Console.Write("".PadLeft(padding));
+            }
+            else if (value == true)
+            {
+                Console.ForegroundColor = invertColors ? ConsoleColor.Red : ConsoleColor.Green;
+                Console.Write("Yes".PadLeft(padding));
+            }
+            else
+            {
+                Console.ForegroundColor = invertColors ? ConsoleColor.Green : ConsoleColor.Red;
+                Console.Write("No".PadLeft(padding));
+            }
+            Console.ResetColor();
         }
     }
 }

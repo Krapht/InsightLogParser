@@ -8,6 +8,7 @@ internal interface ICetusClient : IDisposable
     //Misc operations
     bool IsDummy();
     Task<bool> AuthenticateAsync(Guid playerId, string configurationCetusApiKey);
+    Task<string?> GetSigninCodeAsync();
 
     //Get operations
     Task<ZoneStatisticsResponse?> GetZoneStatisticsAsync(PuzzleZone zone);
@@ -17,5 +18,7 @@ internal interface ICetusClient : IDisposable
     Task<SeenResponse?> PostSeenAsync(PlayerReport request);
     Task<SolvedResponse?> PostSolvedAsync(PlayerReport request);
     Task<ScreenshotResponse?> PostScreenshotAsync(Screenshot screenshot);
-    Task<string?> GetSigninCodeAsync();
+
+    //"Search" operations
+    Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request);
 }

@@ -104,9 +104,11 @@ namespace InsightLogParser.Client.Parsing
                             case LogEventType.SessionStart:
                                 _spider.StartSession(logEvent.LogTime);
                                 break;
+
                             case LogEventType.JoinedServer:
                                 _spider.SetServer(logEvent.ServerAddress!);
                                 break;
+
                             case LogEventType.SessionEnd:
                                 _spider.EndSession(logEvent.LogTime);
                                 break;
@@ -148,8 +150,19 @@ namespace InsightLogParser.Client.Parsing
                                         _messageWriter.WriteDebug($"Skipping puzzle event of type {logEvent.Event.EventType}");
                                         break;
                                 }
-
                                 break;
+
+                            case LogEventType.Teleport:
+                                if (logEvent.Coordinate != null)
+                                {
+                                    _spider.Teleport(logEvent.Coordinate.Value);
+                                }
+                                else
+                                {
+                                    _messageWriter.WriteDebug("No coordinates for teleport");
+                                }
+                                break;
+
                             default:
                                 _messageWriter.WriteDebug($"No handler for event of type {logEvent.Type}");
                                 break;

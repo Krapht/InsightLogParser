@@ -114,6 +114,13 @@ internal class CetusClient : ICetusClient
         return reply?.Code;
     }
 
+    public async Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request)
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug("CETUS: Requesting puzzle status");
+        return await MakePostAsync<PuzzleStatusResponse, PuzzleStatusRequest>("api/v1/puzzle/status", request);
+    }
+
     private async Task<TResponse?> MakePostAsync<TResponse, TRequest>(string requestUri, TRequest request, bool isRetry = false)
     {
         try

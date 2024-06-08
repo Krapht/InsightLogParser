@@ -19,6 +19,7 @@ internal class CheeseMenu : IMenu
             if (_spider.IsOnline())
             {
                 yield return ('s', "Open solution to last opened puzzle, if available");
+                yield return ('m', "Find mate to matchbox closest to last teleport");
             }
         }
     }
@@ -29,6 +30,9 @@ internal class CheeseMenu : IMenu
         {
             case 's':
                 _spider.OpenSolutionScreenshot();
+                return MenuResult.Ok;
+            case 'm':
+                _spider.TargetOtherMatchbox();
                 return MenuResult.Ok;
             default:
                 return MenuResult.NotValidOption;

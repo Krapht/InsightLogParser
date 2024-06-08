@@ -30,4 +30,14 @@ public class InsightPuzzle
     /// Ids of puzzles flagged as "incompatible", purpose unknown
     /// </summary>
     public IReadOnlyList<int> IncompatibleIds { get; set; } = [];
+
+    /// <summary>
+    /// The primary coordinate of a puzzle
+    /// </summary>
+    public Coordinate? PrimaryCoordinate { get; set; }
+
+    /// <summary>
+    /// The secondary coordinate of a puzzle, currently only used by matchboxes
+    /// </summary>
+    public Coordinate? SecondaryCoordinate { get; set; }
 }

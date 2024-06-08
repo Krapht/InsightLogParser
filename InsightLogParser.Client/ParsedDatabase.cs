@@ -44,7 +44,7 @@ namespace InsightLogParser.Client
         private ParsedDb GetEmptyDb()
         {
             var zones = Enum.GetValues<PuzzleZone>().Where(x => x != PuzzleZone.Unknown);
-            return new ParsedDb()
+            return new ParsedDb
             {
                 Version = 1,
                 Zones = zones.Select(x => new ZoneNode()
@@ -326,6 +326,19 @@ namespace InsightLogParser.Client
             var timestring = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
             var backupName = $"{filePart}-backup-{timestring}{extensionPart}";
             File.Copy(_jsonPath, backupName);
+        }
+
+        public bool IsSolved(int puzzleKrakenId)
+        {
+            lock (_lock)
+            {
+                foreach (var zoneNode in _db.Zones.Values)
+                {
+                    if (zoneNode.SolvedEntries.Values.Any(x => x.ContainsKey(puzzleKrakenId))) return true;
+                }
+
+                return false;
+            }
         }
     }
 }

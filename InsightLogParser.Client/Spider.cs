@@ -1,6 +1,4 @@
-﻿
-using System.Diagnostics;
-using InsightLogParser.Client.Cetus;
+﻿using InsightLogParser.Client.Cetus;
 using InsightLogParser.Client.Screenshots;
 using InsightLogParser.Common;
 using InsightLogParser.Common.ApiModels;
@@ -20,6 +18,7 @@ namespace InsightLogParser.Client
         private readonly TimeTools _timeTools;
         private readonly GamePuzzleHandler _gamePuzzleHandler;
         private readonly UserComputer _computer;
+        private readonly TeleportManager _teleportManager;
         private ScreenshotManager? _screenshotManager = null;
 
         //State
@@ -34,6 +33,7 @@ namespace InsightLogParser.Client
             , TimeTools timeTools
             , GamePuzzleHandler gamePuzzleHandler
             , UserComputer computer
+            , TeleportManager teleportManager
             )
         {
             _messageWriter = messageWriter;
@@ -44,6 +44,7 @@ namespace InsightLogParser.Client
             _timeTools = timeTools;
             _gamePuzzleHandler = gamePuzzleHandler;
             _computer = computer;
+            _teleportManager = teleportManager;
         }
 
         public void SetScreenshotManager(ScreenshotManager screenshotManager)  { _screenshotManager = screenshotManager; }
@@ -374,14 +375,13 @@ namespace InsightLogParser.Client
                 _screenshotManager?.FlagScreenshotAsHandled();
             }
 
-            return success ;
+            return success;
         }
 
         public ScreenshotManager? GetScreenshotManager()
         {
             return _screenshotManager;
         }
-
 
         public async Task OpenCetusWebAsync()
         {
@@ -411,6 +411,118 @@ namespace InsightLogParser.Client
             {
                 _messageWriter.WriteError($"Failed to launch browser: {e}");
             }
+        }
+
+        public void Teleport(Coordinate coord)
+        {
+            _teleportManager.Teleport(coord);
+        }
+
+        public void TargetPuzzle(int puzzleId)
+        {
+            if (!_gamePuzzleHandler.PuzzleDatabase.TryGetValue(puzzleId, out var targetPuzzle))
+            {
+                _messageWriter.WriteError($"Unknown puzzle id {puzzleId}");
+                return;
+            }
+
+            var puzzleName = WorldInformation.GetPuzzleName(targetPuzzle.Type);
+            var targetCoord = targetPuzzle.PrimaryCoordinate;
+            if (targetCoord == null)
+            {
+                _messageWriter.WriteError($"Puzzle {puzzleId} ({puzzleName}) does not have a coordinate");
+                return;
+            }
+
+            _teleportManager.SetTarget(targetCoord.Value);
+            _messageWriter.WriteInfo($"Targeting {puzzleName} with id {puzzleId}");
+        }
+
+        public void TargetOtherMatchbox()
+        {
+            var lastTeleport = _teleportManager.GetLastTeleport();
+            if (lastTeleport == null)
+            {
+                _messageWriter.WriteError("No recorded last teleport");
+                return;
+            }
+
+            var targetMatchbox = _gamePuzzleHandler.PuzzleDatabase.Values
+                .Where(x => x.IsWorldPuzzle && x.Type == PuzzleType.MatchBox)
+                .Select(x => new[] { (Puzzle: x, Coordinate: x.PrimaryCoordinate), (Puzzle: x, Coordinate: x.SecondaryCoordinate) })
+                .SelectMany(x => x)
+                .Where(x => x.Coordinate != null)
+                .Select(x => (x.Puzzle, Distance: x.Coordinate!.Value.GetDistance2d(lastTeleport.Value)))
+                .OrderBy(x => x.Distance)
+                .FirstOrDefault();
+
+            if (targetMatchbox == default)
+            {
+                _messageWriter.WriteError("No closest matchbox, this is weird (and probably a bug)");
+                return;
+            }
+
+            var boxes = new[] { targetMatchbox.Puzzle.PrimaryCoordinate.Value, targetMatchbox.Puzzle.SecondaryCoordinate.Value };
+            var furthest = boxes.OrderByDescending(x => x.GetDistance2d(lastTeleport.Value)).FirstOrDefault();
+            _messageWriter.WriteInfo($"Targeting Matchbox {targetMatchbox.Puzzle.KrakenId}");
+            _teleportManager.SetTarget(furthest);
+        }
+
+        public async Task ListClosestAsync(int numberToList, bool use2dDistance)
+        {
+            var lastTeleport = _teleportManager.GetLastTeleport();
+            if (lastTeleport == null)
+            {
+                _messageWriter.WriteError("No recorded last teleport");
+                return;
+            }
+
+            double GetDistance(Coordinate a, Coordinate b)
+            {
+                if (use2dDistance) return a.GetDistance2d(b);
+                return a.GetDistance3d(b);
+            }
+
+            var worldPuzzles = _gamePuzzleHandler.PuzzleDatabase.Values
+                .Where(x => x.IsWorldPuzzle)
+                .Select(x => new[] { (Puzzle: x, Coordinate: x.PrimaryCoordinate), (Puzzle: x, Coordinate: x.SecondaryCoordinate) })
+                .SelectMany(x => x)
+                .Where(x => x.Coordinate != null)
+                .Select(x => (x.Puzzle, Distance: GetDistance(x.Coordinate!.Value, lastTeleport.Value)))
+                .OrderBy(x => x.Distance)
+                .Take(numberToList)
+                .ToList();
+
+            var hasCetusStatus = false;
+            Dictionary<int, PuzzleStatus> puzzleStatus = new();
+            if (IsOnline())
+            {
+                var puzzleIds = worldPuzzles.Select(x => x.Puzzle.KrakenId)
+                    .ToArray();
+                var request = new PuzzleStatusRequest() { PuzzleIds = puzzleIds };
+                var puzzleStatusResponse = await _cetusClient.GetPuzzleStatusAsync(request);
+                hasCetusStatus = puzzleStatusResponse != null;
+                if (puzzleStatusResponse != null)
+                {
+                    puzzleStatus = puzzleStatusResponse.PuzzleStatus;
+                }
+            }
+
+            var distanceModels = worldPuzzles.Select(x =>
+            {
+                var cetusStatus = puzzleStatus!.GetValueOrDefault(x.Puzzle.KrakenId, null);
+                return new MessageWriter.DistanceModel()
+                {
+                    PuzzleId = x.Puzzle.KrakenId,
+                    PuzzleName = WorldInformation.GetPuzzleName(x.Puzzle.Type),
+                    IsSolved = _db.IsSolved(x.Puzzle.KrakenId),
+                    Distance = x.Distance,
+                    Seen = cetusStatus?.SeenInCurrentCycle,
+                    RequestsScreenshot = cetusStatus?.ScreenshotRequested,
+                };
+            });
+
+            _messageWriter.WriteClosest(distanceModels, hasCetusStatus);
         }
     }
 }

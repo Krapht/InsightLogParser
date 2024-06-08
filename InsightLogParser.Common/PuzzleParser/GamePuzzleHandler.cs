@@ -40,6 +40,7 @@ public class GamePuzzleHandler
         var puzzleZone = PuzzleZone.Unknown;
         var isWorldPuzzle = false;
         var incompatible = Enumerable.Empty<int>();
+        (Coordinate? Primary, Coordinate? Secondary) coordinates = default;
 
         if (arg.Serialized != null)
         {
@@ -71,6 +72,9 @@ public class GamePuzzleHandler
                     var isOk = int.TryParse(value, out var id);
                     return (IsOk: isOk, KrakenId: id);
                 }).Where(x => x.IsOk).Select(x => x.KrakenId);
+
+                //Coordinates
+                coordinates = GetCoordinates(puzzleType, deserialized);
             }
         }
 
@@ -81,7 +85,54 @@ public class GamePuzzleHandler
             Type = puzzleType,
             IsWorldPuzzle = isWorldPuzzle,
             IncompatibleIds = incompatible.ToList(),
+            PrimaryCoordinate = coordinates.Primary,
+            SecondaryCoordinate = coordinates.Secondary,
         };
+    }
+
+    private (Coordinate? Primary, Coordinate? Secondary) GetCoordinates(PuzzleType puzzleType, SerializedInfo deserialized)
+    {
+        switch (puzzleType)
+        {
+            //Use the ActorTransform as coordinates for these puzzles
+            case PuzzleType.WanderingEcho:
+            case PuzzleType.HiddenArchway:
+            case PuzzleType.HiddenPentad: //TODO: Confirm
+            case PuzzleType.HiddenRing:
+            case PuzzleType.FlowOrbs: //TODO: Confirm
+            case PuzzleType.HiddenCube:
+            case PuzzleType.SightSeer: //TODO: Confirm
+            case PuzzleType.LightMotif:
+            case PuzzleType.ShyAura: //TODO: Confirm
+                return (Coordinate.Parse(deserialized.ActorTransform), null);
+
+            //Matchboxes have two coordinates, one for each box
+            case PuzzleType.MatchBox:
+                return (Coordinate.Parse(deserialized.Mesh1Transform), Coordinate.Parse(deserialized.Mesh2Transform));
+
+            //Glide rings have multiple coordinates, but the important one is the starting platform
+            case PuzzleType.GlideRings:
+                return (Coordinate.Parse(deserialized.StartingPlatformTransform), null);
+
+            //These puzzles have no coordinates or are excluded
+            case PuzzleType.ArmillaryRings:
+            case PuzzleType.LogicGrid:
+            case PuzzleType.SentinelStones:
+            case PuzzleType.Unknown:
+            case PuzzleType.Skydrop:
+            case PuzzleType.CrystalLabyrinth:
+            case PuzzleType.PatternGrid:
+            case PuzzleType.MatchThree:
+            case PuzzleType.RollingBlock:
+            case PuzzleType.PhasicDial:
+            case PuzzleType.MusicGrid:
+            case PuzzleType.MemoryGrid:
+            case PuzzleType.MorphicFractal:
+            case PuzzleType.ShiftingMosaic:
+            default:
+                break;
+        }
+        return (null, null);
     }
 
     private PuzzleZone GetZoneFromName(string? name)

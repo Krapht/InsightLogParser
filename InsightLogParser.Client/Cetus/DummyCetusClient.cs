@@ -18,6 +18,11 @@ namespace InsightLogParser.Client.Cetus
             return Task.FromResult<ScreenshotResponse?>(null);
         }
 
+        public Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request)
+        {
+            return Task.FromResult<PuzzleStatusResponse?>(null);
+        }
+
         public Task<string?> GetSigninCodeAsync()
         {
             return Task.FromResult<string?>(null);
