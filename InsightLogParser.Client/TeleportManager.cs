@@ -33,15 +33,20 @@ internal class TeleportManager
 
         if (_target != null)
         {
-            var delta = _target.Value - _lastTeleport.Value;
-            var distance = _target.Value.GetDistance3d(_lastTeleport.Value);
-
-            var xString = delta.X < 0 ? $"{-delta.X/100:####}m west" : $"{delta.X/100:####}m east";
-            var yString = delta.Y < 0 ? $"{-delta.Y/100:####}m north" : $"{delta.Y/100:####}m south";
-            var zString = delta.Z < 0 ? $"{-delta.Z/100:####}m down" : $"{delta.Z/100:####}m up";
-
-            _writer.WriteInfo($"Target: {distance/100:####}m ({xString}, {yString}, {zString})");
+            WriteDistance(_lastTeleport.Value, _target.Value, _writer);
         }
+    }
+
+    public static void WriteDistance(Coordinate current, Coordinate target, MessageWriter writer)
+    {
+        var delta = target - current;
+        var distance = target.GetDistance3d(current);
+
+        var xString = delta.X < 0 ? $"{-delta.X/100:####}m west" : $"{delta.X/100:####}m east";
+        var yString = delta.Y < 0 ? $"{-delta.Y/100:####}m north" : $"{delta.Y/100:####}m south";
+        var zString = delta.Z < 0 ? $"{-delta.Z/100:####}m down" : $"{delta.Z/100:####}m up";
+
+        writer.WriteInfo($"Target: {distance/100:####}m ({xString}, {yString}, {zString})");
     }
 
     public Coordinate? GetLastTeleport()

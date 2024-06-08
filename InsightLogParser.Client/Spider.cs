@@ -1,4 +1,5 @@
 ﻿using InsightLogParser.Client.Cetus;
+using InsightLogParser.Client.Routing;
 using InsightLogParser.Client.Screenshots;
 using InsightLogParser.Common;
 using InsightLogParser.Common.ApiModels;
@@ -19,6 +20,7 @@ namespace InsightLogParser.Client
         private readonly GamePuzzleHandler _gamePuzzleHandler;
         private readonly UserComputer _computer;
         private readonly TeleportManager _teleportManager;
+        private readonly PuzzleRouter _puzzleRouter;
         private ScreenshotManager? _screenshotManager = null;
 
         //State
@@ -34,6 +36,7 @@ namespace InsightLogParser.Client
             , GamePuzzleHandler gamePuzzleHandler
             , UserComputer computer
             , TeleportManager teleportManager
+            , PuzzleRouter puzzleRouter
             )
         {
             _messageWriter = messageWriter;
@@ -45,6 +48,7 @@ namespace InsightLogParser.Client
             _gamePuzzleHandler = gamePuzzleHandler;
             _computer = computer;
             _teleportManager = teleportManager;
+            _puzzleRouter = puzzleRouter;
         }
 
         public void SetScreenshotManager(ScreenshotManager screenshotManager)  { _screenshotManager = screenshotManager; }
@@ -78,6 +82,9 @@ namespace InsightLogParser.Client
         public async Task SolvedAsync(DateTimeOffset timestamp, int puzzleId, PuzzleZone zone, PuzzleType type, short? difficulty)
         {
             if (!ShouldHandlePuzzle(puzzleId, zone, type)) return;
+
+            RouteHandleSolved(puzzleId);
+            
 
             //Local
             var lastSolved = _db.GetLastSolved(zone, type, puzzleId);
@@ -524,5 +531,80 @@ namespace InsightLogParser.Client
 
             _messageWriter.WriteClosest(distanceModels, hasCetusStatus);
         }
+
+        #region Routing
+
+        private void RouteHandleSolved(int puzzleId)
+        {
+            if (!_puzzleRouter.HasRoute()) return;
+
+            _puzzleRouter.AddSolved(puzzleId);
+            var current = _puzzleRouter.CurrentNode();
+            if (current == null) return;
+            if (current.Value.Node.Puzzle.KrakenId != puzzleId) return;
+
+            NextRouteWaypoint();
+        }
+
+        public void GenerateUnsolvedWaypoints(PuzzleZone puzzleZone, PuzzleType puzzleType)
+        {
+            var pool = _gamePuzzleHandler.PuzzleDatabase.Values
+                .Where(x => x.IsWorldPuzzle && x.Zone == puzzleZone && x.Type == puzzleType)
+                .ToList();
+
+            var solved = _db.GetSolvedIds(puzzleZone, puzzleType).ToList();
+            var unsolvedPool = pool.Where(x => !solved.Contains(x.KrakenId)).ToList();
+
+
+            var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
+            var firstNode = _puzzleRouter.SetRoute(unsolvedPool.Select(x => new RouteNode()
+            {
+                Puzzle = x,
+                Servers = null,
+                Stale = null,
+
+            }), startCoordinate);
+
+            if (firstNode == null) return;
+            _messageWriter.WriteInfo($"Targeting: {WorldInformation.GetPuzzleName(firstNode.Value.Node.Puzzle.Type)} ({firstNode.Value.Index}/{firstNode.Value.Max})");
+            TeleportManager.WriteDistance(startCoordinate, firstNode.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
+        }
+
+        public void NextRouteWaypoint()
+        {
+            var current = _puzzleRouter.CurrentNode();
+            if (current == null) return;
+
+            var next = _puzzleRouter.NextNode();
+            if (next == null) return;
+
+            _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value);
+            _messageWriter.WriteInfo($"Targeting: {WorldInformation.GetPuzzleName(next.Value.Node.Puzzle.Type)} ({next.Value.Index}/{next.Value.Max})");
+            TeleportManager.WriteDistance(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, next.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
+        }
+
+        public void CurrentRouteWaypoint()
+        {
+            var current = _puzzleRouter.CurrentNode();
+            if (current == null) return;
+        }
+
+        public void PreviousRouteWaypoint()
+        {
+            var previous = _puzzleRouter.PreviousNode();
+            if (previous == null) return;
+            _teleportManager.SetTarget(previous.Value.Node.Puzzle.PrimaryCoordinate!.Value);
+            _messageWriter.WriteInfo($"Targeting previous: {WorldInformation.GetPuzzleName(previous.Value.Node.Puzzle.Type)} ({previous.Value.Index}/{previous.Value.Max})");
+        }
+        public bool HasRoute()
+        {
+            return _puzzleRouter.HasRoute();
+        }
+
+        public void ClearRoute()
+        {
+            _puzzleRouter.ClearRoute();;
+        }
+        #endregion
     }
 }

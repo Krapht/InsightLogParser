@@ -1,6 +1,7 @@
 ﻿using InsightLogParser.Client.Cetus;
 using InsightLogParser.Client.Menu;
 using InsightLogParser.Client.Parsing;
+using InsightLogParser.Client.Routing;
 using InsightLogParser.Client.Screenshots;
 using InsightLogParser.Common;
 using InsightLogParser.Common.PuzzleParser;
@@ -57,7 +58,8 @@ public class MainThing
         var teleportManager = new TeleportManager(_messageWriter);
 
         _messageWriter.WriteInitLine("Poking spider", ConsoleColor.Green);
-        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler, computer, teleportManager);
+        var puzzleIterator = new PuzzleRouter(_messageWriter);
+        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler, computer, teleportManager, puzzleIterator);
 
         //Screenshots only makes sense in online mode
         if (spider.IsOnline() && configuration.MonitorScreenshots)

@@ -15,6 +15,7 @@ internal class RootMenu : IMenu
         ('h', "Show this list again"),
         ('c', "--> Configuration [WIP]"),
         ('s', "--> Statistics"),
+        ('r', "--> Routes"),
         ('a', "--> Advanced or risky"),
         ('C', "--> Che....ese (online only)"),
     };
@@ -36,6 +37,9 @@ internal class RootMenu : IMenu
                 return Task.FromResult(MenuResult.Ok);
             case 's':
                 _menuHandler.EnterMenu(new StatisticsMenu(_menuHandler, _spider));
+                return Task.FromResult(MenuResult.Ok);
+            case 'r':
+                _menuHandler.EnterMenu(new RouteMenu(_menuHandler, _spider));
                 return Task.FromResult(MenuResult.Ok);
             case 'a':
                 _menuHandler.EnterMenu(new AdvancedMenu(_menuHandler, _computer, _writer, _spider));
