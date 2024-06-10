@@ -165,6 +165,14 @@ internal class CetusClient : ICetusClient
             .ConfigureAwait(ConfigureAwaitOptions.None);
     }
 
+    public async Task<ZoneUnsolvedResponse?> GetSightedUnsolved(PuzzleZone zone)
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug($"CETUS: Requesting unsolved sightings for {zone}");
+        return await MakeGetAsync<ZoneUnsolvedResponse>($"api/v1/zone/{(int)zone}/unsolved/")
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
     private async Task<T?> MakeGetAsync<T>(string requestUri, bool isRetry = false)
     {
         try

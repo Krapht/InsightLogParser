@@ -534,4 +534,60 @@ internal class MessageWriter
         }
         Console.ResetColor();
     }
+
+    public class WaypointMessage
+    {
+        public required int PuzzleId { get; init; }
+        public required string PuzzleName { get; init; }
+        public required int CurrentWaypoint { get; init; }
+        public required int TotalWaypoints { get; init; }
+        public bool? Stale { get; set; }
+        public bool? IsOnCurrentServer { get; set; }
+    }
+
+    public void WriteWaypointMessage(WaypointMessage message)
+    {
+        lock (_lock)
+        {
+            Console.Write("Targeting: ");
+            WritePuzzleName(message.PuzzleName);
+            Console.Write($" with id {message.PuzzleId} ({message.CurrentWaypoint}/{message.TotalWaypoints})");
+            if (message.Stale.HasValue)
+            {
+                Console.Write(" Stale: ");
+                if (message.Stale == true)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("Yes");
+                    Console.ResetColor();
+                }
+
+                if (message.Stale == false)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("No");
+                    Console.ResetColor();
+                }
+            }
+
+            if (message.IsOnCurrentServer.HasValue)
+            {
+                Console.Write(" Server: ");
+                if (message.IsOnCurrentServer == true)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("Current");
+                    Console.ResetColor();
+                }
+
+                if (message.IsOnCurrentServer == false)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("Other");
+                    Console.ResetColor();
+                }
+            }
+            Console.WriteLine();
+        }
+    }
 }

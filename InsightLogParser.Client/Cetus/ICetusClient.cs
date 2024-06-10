@@ -13,6 +13,7 @@ internal interface ICetusClient : IDisposable
     //Get operations
     Task<ZoneStatisticsResponse?> GetZoneStatisticsAsync(PuzzleZone zone);
     Task<Sighting[]?> GetSightingsAsync(PuzzleZone zone, PuzzleType type);
+    Task<ZoneUnsolvedResponse?> GetSightedUnsolved(PuzzleZone zone);
 
     //Post operations
     Task<SeenResponse?> PostSeenAsync(PlayerReport request);

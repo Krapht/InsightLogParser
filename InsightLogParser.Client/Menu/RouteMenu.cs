@@ -20,11 +20,19 @@ internal class RouteMenu : IMenu
         {
             yield return (null, "Routes. Press [h] to display this menu again and backspace to back");
             yield return ('u', "Get route to unsolved puzzles");
+            if (_spider.IsOnline())
+            {
+                yield return ('f', "Fetch sighted unsolved puzzles for a zone from Cetus");
+            }
             if (_spider.HasRoute())
             {
                 yield return ('n', "Next waypoint");
                 yield return ('p', "Previous waypoint");
                 yield return ('c', "Clear route");
+                if (_spider.IsOnline())
+                {
+                    yield return ('b', "Open puzzle in browser");
+                }
             }
         }
     }
@@ -41,6 +49,13 @@ internal class RouteMenu : IMenu
                 _spider.GenerateUnsolvedWaypoints(puzzleZone, puzzleType);
                 return MenuResult.PrintMenu;
 
+            case 'f':
+                if (!_spider.IsOnline()) return MenuResult.NotValidOption;
+                var zone = _menuHandler.PickZone();
+                if (zone == PuzzleZone.Unknown) return MenuResult.NotValidOption;
+                await _spider.GenerateUnsolvedRouteFromCetus(zone);
+                return MenuResult.PrintMenu;
+
             case 'n':
                 if (!_spider.HasRoute()) return MenuResult.NotValidOption;
                 _spider.NextRouteWaypoint();
@@ -55,6 +70,11 @@ internal class RouteMenu : IMenu
                 if (!_spider.HasRoute()) return MenuResult.NotValidOption;
                 _spider.ClearRoute();
                 return MenuResult.PrintMenu;
+
+            case 'b':
+                if (!_spider.HasRoute() || !_spider.IsOnline()) return MenuResult.NotValidOption;
+                _spider.OpenCurrentWaypointOnCetus();
+                return MenuResult.Ok;
 
             default:
                 return MenuResult.NotValidOption;

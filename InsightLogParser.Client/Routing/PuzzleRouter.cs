@@ -199,6 +199,7 @@ internal class PuzzleRouter
         if (newIndex < 0)
         {
             _writer.WriteError("No previous puzzle");
+            return null;
         }
 
         _sequenceIndex = newIndex;
@@ -229,7 +230,7 @@ internal class PuzzleRouter
         }
 
         var newIndex = _sequenceIndex + 1;
-        if (newIndex > _sequence.Count)
+        if (newIndex >= _sequence.Count)
         {
             _writer.WriteInfo("No more puzzles in route");
             return null;

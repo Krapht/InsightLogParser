@@ -83,9 +83,6 @@ namespace InsightLogParser.Client
         {
             if (!ShouldHandlePuzzle(puzzleId, zone, type)) return;
 
-            RouteHandleSolved(puzzleId);
-            
-
             //Local
             var lastSolved = _db.GetLastSolved(zone, type, puzzleId);
             _db.AddSolved(zone, type, puzzleId, timestamp);
@@ -145,6 +142,7 @@ namespace InsightLogParser.Client
             }
 
             _messageWriter.WriteEndSolved();
+            RouteHandleSolved(puzzleId);
 
             _screenshotManager?.SetLastPuzzle(puzzleId, true);
         }
@@ -420,6 +418,18 @@ namespace InsightLogParser.Client
             }
         }
 
+        public void OpenPuzzleOnCetus(int puzzleId)
+        {
+            try
+            {
+                _computer.LaunchBrowser($"{_configuration.CetusUri}/goto/puzzle/{puzzleId}");
+            }
+            catch (Exception e)
+            {
+                _messageWriter.WriteError($"Failed to launch browser: {e}");
+            }
+        }
+
         public void Teleport(Coordinate coord)
         {
             _teleportManager.Teleport(coord);
@@ -570,6 +580,48 @@ namespace InsightLogParser.Client
             TeleportManager.WriteDistance(startCoordinate, firstNode.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
         }
 
+        public async Task GenerateUnsolvedRouteFromCetus(PuzzleZone zone)
+        {
+            var puzzles = await _cetusClient.GetSightedUnsolved(zone);
+            if (puzzles == null)
+            {
+                _messageWriter.WriteError("Failed to get unsolved puzzles");
+                return;
+            }
+
+            var unsolved = puzzles.Unsolved;
+            var pool = _gamePuzzleHandler.PuzzleDatabase.Values
+                .Where(x => x.IsWorldPuzzle && x.Zone == zone)
+                .ToList();
+
+            var joined = pool.Join(unsolved , x => x.KrakenId, x => x.PuzzleId, (puzzle, unsolved) => (puzzle, unsolved));
+            var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
+            var firstNode = _puzzleRouter.SetRoute(joined.Select(x => new RouteNode()
+            {
+                Puzzle = x.puzzle,
+                Servers = x.unsolved.Servers,
+                Stale = x.unsolved.IsStale,
+
+            }), startCoordinate);
+
+            if (firstNode == null) return;
+            WriteWaypointMessage(firstNode.Value.Node, firstNode.Value.Index, firstNode.Value.Max);
+            TeleportManager.WriteDistance(startCoordinate, firstNode.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
+        }
+
+        private void WriteWaypointMessage(RouteNode node, int current, int max)
+        {
+            _messageWriter.WriteWaypointMessage(new MessageWriter.WaypointMessage()
+            {
+                PuzzleId = node.Puzzle.KrakenId,
+                PuzzleName = WorldInformation.GetPuzzleName(node.Puzzle.Type),
+                CurrentWaypoint = current,
+                TotalWaypoints = max,
+                Stale = node.Stale,
+                IsOnCurrentServer = node.Servers?.Contains(_serverAddress),
+            });
+        }
+
         public void NextRouteWaypoint()
         {
             var current = _puzzleRouter.CurrentNode();
@@ -579,7 +631,7 @@ namespace InsightLogParser.Client
             if (next == null) return;
 
             _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value);
-            _messageWriter.WriteInfo($"Targeting: {WorldInformation.GetPuzzleName(next.Value.Node.Puzzle.Type)} ({next.Value.Index}/{next.Value.Max})");
+            WriteWaypointMessage(next.Value.Node, next.Value.Index, next.Value.Max);
             TeleportManager.WriteDistance(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, next.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
         }
 
@@ -589,12 +641,23 @@ namespace InsightLogParser.Client
             if (current == null) return;
         }
 
+        public void OpenCurrentWaypointOnCetus()
+        {
+            var current = _puzzleRouter.CurrentNode();
+            if (current == null)
+            {
+                _messageWriter.WriteError("No current route");
+                return;
+            }
+            OpenPuzzleOnCetus(current.Value.Node.Puzzle.KrakenId);
+        }
+
         public void PreviousRouteWaypoint()
         {
             var previous = _puzzleRouter.PreviousNode();
             if (previous == null) return;
             _teleportManager.SetTarget(previous.Value.Node.Puzzle.PrimaryCoordinate!.Value);
-            _messageWriter.WriteInfo($"Targeting previous: {WorldInformation.GetPuzzleName(previous.Value.Node.Puzzle.Type)} ({previous.Value.Index}/{previous.Value.Max})");
+            WriteWaypointMessage(previous.Value.Node, previous.Value.Index, previous.Value.Max);
         }
         public bool HasRoute()
         {
