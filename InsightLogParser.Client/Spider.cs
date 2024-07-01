@@ -565,9 +565,8 @@ namespace InsightLogParser.Client
             var solved = _db.GetSolvedIds(puzzleZone, puzzleType).ToList();
             var unsolvedPool = pool.Where(x => !solved.Contains(x.KrakenId)).ToList();
 
-
             var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
-            var firstNode = _puzzleRouter.SetRoute(unsolvedPool.Select(x => new RouteNode()
+            _puzzleRouter.SetRoute(unsolvedPool.Select(x => new RouteNode()
             {
                 Puzzle = x,
                 Servers = null,
@@ -575,9 +574,7 @@ namespace InsightLogParser.Client
 
             }), startCoordinate);
 
-            if (firstNode == null) return;
-            _messageWriter.WriteInfo($"Targeting: {WorldInformation.GetPuzzleName(firstNode.Value.Node.Puzzle.Type)} ({firstNode.Value.Index}/{firstNode.Value.Max})");
-            TeleportManager.WriteDistance(startCoordinate, firstNode.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
+            NextRouteWaypoint();
         }
 
         public async Task GenerateUnsolvedRouteFromCetus(PuzzleZone zone)
@@ -596,7 +593,7 @@ namespace InsightLogParser.Client
 
             var joined = pool.Join(unsolved , x => x.KrakenId, x => x.PuzzleId, (puzzle, unsolved) => (puzzle, unsolved));
             var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
-            var firstNode = _puzzleRouter.SetRoute(joined.Select(x => new RouteNode()
+            _puzzleRouter.SetRoute(joined.Select(x => new RouteNode()
             {
                 Puzzle = x.puzzle,
                 Servers = x.unsolved.Servers,
@@ -604,9 +601,7 @@ namespace InsightLogParser.Client
 
             }), startCoordinate);
 
-            if (firstNode == null) return;
-            WriteWaypointMessage(firstNode.Value.Node, firstNode.Value.Index, firstNode.Value.Max);
-            TeleportManager.WriteDistance(startCoordinate, firstNode.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
+            NextRouteWaypoint();
         }
 
         private void WriteWaypointMessage(RouteNode node, int current, int max)
@@ -625,14 +620,14 @@ namespace InsightLogParser.Client
         public void NextRouteWaypoint()
         {
             var current = _puzzleRouter.CurrentNode();
-            if (current == null) return;
+            var currentCoordinate = current?.Node.Puzzle.PrimaryCoordinate!.Value ?? _teleportManager.GetLastTeleport() ?? default;
 
             var next = _puzzleRouter.NextNode();
             if (next == null) return;
 
             _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value);
             WriteWaypointMessage(next.Value.Node, next.Value.Index, next.Value.Max);
-            TeleportManager.WriteDistance(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, next.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
+            TeleportManager.WriteDistance(currentCoordinate, next.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
         }
 
         public void CurrentRouteWaypoint()

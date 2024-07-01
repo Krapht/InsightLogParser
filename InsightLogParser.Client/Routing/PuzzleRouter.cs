@@ -125,7 +125,7 @@ internal class PuzzleRouter
         }
     }
 
-    public (RouteNode Node, int Index, int Max)? SetRoute(IEnumerable<RouteNode> puzzles, Coordinate startCoordinate)
+    public void SetRoute(IEnumerable<RouteNode> puzzles, Coordinate startCoordinate)
     {
         var valid = puzzles
             .Where(x => x.Puzzle.PrimaryCoordinate != null)
@@ -134,7 +134,7 @@ internal class PuzzleRouter
         if (valid.Count == 0)
         {
             _writer.WriteError("No valid puzzles for route");
-            return null;
+            return;
         }
 
         var timer = Stopwatch.StartNew();
@@ -178,7 +178,6 @@ internal class PuzzleRouter
         _sequence = fullPath;
         _sequenceIndex = -1;
         _solvedForCurrentRoute = new HashSet<int>();
-        return NextNode();
     }
 
     public void ClearRoute()
@@ -208,9 +207,14 @@ internal class PuzzleRouter
 
     public (RouteNode Node, int Index, int Max)? CurrentNode()
     {
-        if (_sequenceIndex == null || _sequenceIndex < 0)
+        if (_sequenceIndex == null)
         {
             _writer.WriteError("No current route");
+            return null;
+        }
+
+        if (_sequenceIndex < 0)
+        {
             return null;
         }
 
