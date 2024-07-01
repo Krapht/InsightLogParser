@@ -17,6 +17,7 @@ namespace InsightLogParser.Client.Parsing
         private static readonly Regex _restartHandshakeRegex = new Regex(TimestampPattern + @".*Beginning restart handshake process", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex _stopRegex = new Regex(TimestampPattern + @".*Log file closed", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex _teleportRegex = new Regex(TimestampPattern + @".*Teleporting to X=([-0-9.]+) Y=([-0-9.]+) Z=([-0-9.]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        private static readonly Regex _serverFound = new Regex(TimestampPattern + @".*Gamelift Session Found!: IP: ([0-9\.:]+)", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
         private static readonly Regex _joinedServer = new Regex(TimestampPattern + @".*UPendingNetGame::SendInitialJoin.*RemoteAddr: ([0-9\.:]+), Name", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
 
         public LogParser(Action<string> logLineCallback, MessageWriter messageWriter)
@@ -72,6 +73,12 @@ namespace InsightLogParser.Client.Parsing
                         LogTime = teleport.Value.eventTime,
                         Coordinate = new Coordinate(teleport.Value.x, teleport.Value.y, teleport.Value.z),
                     };
+                }
+
+                var foundServer = MatchServerFound(line);
+                if (foundServer != null)
+                {
+                    _messageWriter.WriteDebug($"Attempting to connect to {foundServer.Value.serverAddress}");
                 }
 
                 var joinedServer = MatchJoinedServer(line);
@@ -173,6 +180,15 @@ namespace InsightLogParser.Client.Parsing
             if (!float.TryParse(result.Groups[3].Value, CultureInfo.InvariantCulture, out var y)) return null;
             if (!float.TryParse(result.Groups[4].Value, CultureInfo.InvariantCulture, out var z)) return null;
             return (eventTime, x, y, z);
+        }
+
+        private (DateTimeOffset eventTime, string serverAddress)? MatchServerFound(string line)
+        {
+            var result = _serverFound.Match(line);
+            if (!result.Success) return null;
+            var timestamp = result.Groups[1].Value;
+            var (_, eventTime) = ParseLogDate(timestamp);
+            return (eventTime, result.Groups[2].Value);
         }
 
         private (DateTimeOffset eventTime, string serverAddress)? MatchJoinedServer(string line)
