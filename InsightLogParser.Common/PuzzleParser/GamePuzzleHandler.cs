@@ -10,7 +10,7 @@ public class GamePuzzleHandler
     public IReadOnlyDictionary<int, InsightPuzzle> PuzzleDatabase { get; internal set; } = new Dictionary<int, InsightPuzzle>();
 
 
-    public async Task LoadAsync(string path)
+    public async Task LoadAsync(string path, bool isOld = false)
     {
         var fs = File.OpenRead(path);
         await using (fs.ConfigureAwait(false))
@@ -23,12 +23,12 @@ public class GamePuzzleHandler
             }
 
             PuzzleDatabase = _parsedDb.Puzzles
-                .Select(ProcessPuzzle)
+                .Select(x => ProcessPuzzle(x, isOld))
                 .ToDictionary(x => x.KrakenId);
         }
     }
 
-    private InsightPuzzle ProcessPuzzle(Puzzle arg)
+    private InsightPuzzle ProcessPuzzle(Puzzle arg, bool isOld)
     {
         var puzzleType = WorldInformation.GetPuzzleTypeByLogName(arg.PuzzleType);
 
@@ -74,7 +74,7 @@ public class GamePuzzleHandler
                 }).Where(x => x.IsOk).Select(x => x.KrakenId);
 
                 //Coordinates
-                coordinates = GetCoordinates(puzzleType, deserialized);
+                coordinates = GetCoordinates(puzzleType, deserialized, isOld);
             }
         }
 
@@ -90,7 +90,7 @@ public class GamePuzzleHandler
         };
     }
 
-    private (Coordinate? Primary, Coordinate? Secondary) GetCoordinates(PuzzleType puzzleType, SerializedInfo deserialized)
+    private (Coordinate? Primary, Coordinate? Secondary) GetCoordinates(PuzzleType puzzleType, SerializedInfo deserialized, bool isOld)
     {
         switch (puzzleType)
         {
@@ -111,7 +111,23 @@ public class GamePuzzleHandler
 
             //Matchboxes have two coordinates, one for each box
             case PuzzleType.MatchBox:
-                return (Coordinate.Parse(deserialized.Mesh1Transform), Coordinate.Parse(deserialized.Mesh2Transform));
+                if (isOld)
+                {
+                    var primary = Coordinate.Parse(deserialized.Mesh1Transform);
+                    var secondary = Coordinate.Parse(deserialized.Mesh2Transform);
+                    return (primary, secondary);
+                }
+                else
+                {
+                    if (deserialized.SubComponent0 == null) return (default, default);
+                    if (deserialized.SubComponent1 == null) return (default, default);
+                    var primary = deserialized.SubComponent0.Value.Deserialize<SerializedSubComponent>();
+                    var secondary = deserialized.SubComponent1.Value.Deserialize<SerializedSubComponent>();
+                    if (primary == null) return (default, default);
+                    if (secondary == null) return (default, default);
+
+                    return (Coordinate.Parse(primary.WorldTransform), Coordinate.Parse(secondary.WorldTransform));
+                }
 
             //Glide rings have multiple coordinates, but the important one is the starting platform
             case PuzzleType.GlideRings:
