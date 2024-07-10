@@ -81,4 +81,7 @@ public class SerializedInfo
 
     [JsonPropertyName("Mesh2Transform")]
     public string? Mesh2Transform { get; set; }
+
+    [JsonPropertyName("shinyMeshTransform")]
+    public string? ShinyMeshTransform { get; set; }
 }

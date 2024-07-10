@@ -95,7 +95,6 @@ public class GamePuzzleHandler
         switch (puzzleType)
         {
             //Use the ActorTransform as coordinates for these puzzles
-            case PuzzleType.WanderingEcho:
             case PuzzleType.HiddenArchway:
             case PuzzleType.HiddenPentad: //TODO: Confirm
             case PuzzleType.HiddenRing:
@@ -105,6 +104,10 @@ public class GamePuzzleHandler
             case PuzzleType.LightMotif:
             case PuzzleType.ShyAura: //TODO: Confirm
                 return (Coordinate.Parse(deserialized.ActorTransform), null);
+
+            //Echoes have a special coordinate
+            case PuzzleType.WanderingEcho:
+                return (Coordinate.Parse(deserialized.ShinyMeshTransform), null);
 
             //Matchboxes have two coordinates, one for each box
             case PuzzleType.MatchBox:
