@@ -19,7 +19,7 @@ internal class RouteMenu : IMenu
         get
         {
             yield return (null, "Routes. Press [h] to display this menu again and backspace to back");
-            yield return ('u', "Get route to unsolved puzzles");
+            yield return ('u', "Get route to unsolved local puzzles");
             if (_spider.IsOnline())
             {
                 yield return ('f', "Fetch sighted unsolved puzzles for a zone from Cetus");

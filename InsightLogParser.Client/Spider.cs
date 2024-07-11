@@ -579,6 +579,8 @@ namespace InsightLogParser.Client
 
         public async Task GenerateUnsolvedRouteFromCetus(PuzzleZone zone)
         {
+            ClearRoute();
+
             var puzzles = await _cetusClient.GetSightedUnsolved(zone);
             if (puzzles == null)
             {
@@ -591,7 +593,14 @@ namespace InsightLogParser.Client
                 .Where(x => x.IsWorldPuzzle && x.Zone == zone)
                 .ToList();
 
-            var joined = pool.Join(unsolved , x => x.KrakenId, x => x.PuzzleId, (puzzle, unsolved) => (puzzle, unsolved));
+            var joined = pool.Join(unsolved , x => x.KrakenId, x => x.PuzzleId, (puzzle, unsolved) => (puzzle, unsolved))
+                .ToList();
+            if (!joined.Any())
+            {
+                _messageWriter.WriteInfo("No known unsolved puzzles");
+                return;
+            }
+
             var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
             _puzzleRouter.SetRoute(joined.Select(x => new RouteNode()
             {
