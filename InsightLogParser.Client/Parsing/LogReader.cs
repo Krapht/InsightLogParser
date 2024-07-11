@@ -16,6 +16,42 @@ namespace InsightLogParser.Client.Parsing
             _sr = new StreamReader(_fs, Encoding.UTF8);
         }
 
+        /// <summary>
+        /// This code is ripped from the non-async version of .NET's ReadLine but if it runs out of characters keeps going until a full line has been read
+        /// </summary>
+        private async Task<string?> ReadFullLine(StreamReader reader, CancellationToken token)
+        {
+            StringBuilder sb = new StringBuilder();
+            while (true)
+            {
+                if (token.IsCancellationRequested)
+                {
+                    return null;
+                }
+                int ch = reader.Read();
+                //if we reach the end of stream, wait a bit and try again
+                if (ch == -1)
+                {
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(DelayTime), token).ConfigureAwait(ConfigureAwaitOptions.None);
+                    }
+                    catch (OperationCanceledException) { }
+                    continue;
+                }
+                if (ch == '\r' || ch == '\n')
+                {
+                    if (ch == '\r' && reader.Peek() == '\n')
+                    {
+                        reader.Read();
+                    }
+
+                    return sb.ToString();
+                }
+                sb.Append((char)ch);
+            }
+        }
+
         public async IAsyncEnumerable<string> ReadLinesAsync([EnumeratorCancellation] CancellationToken token = default)
         {
             while (!token.IsCancellationRequested)
@@ -36,7 +72,8 @@ namespace InsightLogParser.Client.Parsing
                 string? line;
                 try
                 {
-                    line = await _sr.ReadLineAsync(token).ConfigureAwait(false);
+                    //line = await _sr.ReadLineAsync(token).ConfigureAwait(false);
+                    line = await ReadFullLine(_sr, token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
