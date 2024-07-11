@@ -9,15 +9,26 @@ internal class RootMenu : IMenu
     private readonly MessageWriter _writer;
     private readonly UserComputer _computer;
 
-    public IEnumerable<(char? key, string text)> MenuOptions { get; } = new (char? key, string text)[]
+    public IEnumerable<(char? key, string text)> MenuOptions
     {
-        (null, "Available key commands. Press backspace to quit"),
-        ('h', "Show this list again"),
-        ('c', "--> Configuration [WIP]"),
-        ('s', "--> Statistics"),
-        ('a', "--> Advanced or risky"),
-        ('C', "--> Che....ese (online only)"),
-    };
+        get
+        {
+            yield return (null, "Available key commands. Press backspace to quit");
+            yield return ('h', "Show this list again");
+            if (_spider.IsOnline())
+            {
+                yield return ('w', "Log-in to cetus web ui");
+            }
+            yield return ('c', "--> Configuration [WIP]");
+            yield return ('s', "--> Statistics");
+            yield return ('r', "--> Routes");
+            yield return ('a', "--> Advanced or risky");
+            if (_spider.IsOnline())
+            {
+                yield return ('C', "--> Che....ese (online only)");
+            }
+        }
+    }
 
     public RootMenu(MenuHandler menuHandler, Spider spider, MessageWriter writer, UserComputer computer)
     {
@@ -27,24 +38,30 @@ internal class RootMenu : IMenu
         _computer = computer;
     }
 
-    public Task<MenuResult> HandleOptionAsync(char keyChar)
+    public async Task<MenuResult> HandleOptionAsync(char keyChar)
     {
         switch (keyChar)
         {
+            case 'w':
+                await _spider.OpenCetusWebAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+                return MenuResult.Ok;
             case 'c':
                 _menuHandler.EnterMenu(new ConfigurationMenu(_spider));
-                return Task.FromResult(MenuResult.Ok);
+                return MenuResult.Ok;
             case 's':
                 _menuHandler.EnterMenu(new StatisticsMenu(_menuHandler, _spider));
-                return Task.FromResult(MenuResult.Ok);
+                return MenuResult.Ok;
+            case 'r':
+                _menuHandler.EnterMenu(new RouteMenu(_menuHandler, _spider));
+                return MenuResult.Ok;
             case 'a':
-                _menuHandler.EnterMenu(new AdvancedMenu(_menuHandler, _computer, _writer, _spider));
-                return Task.FromResult(MenuResult.Ok);
+                _menuHandler.EnterMenu(new AdvancedMenu(_computer, _writer));
+                return MenuResult.Ok;
             case 'C':
-                _menuHandler.EnterMenu(new CheeseMenu(_spider));
-                return Task.FromResult(MenuResult.Ok);
+                _menuHandler.EnterMenu(new CheeseMenu(_spider, _writer));
+                return MenuResult.Ok;
             default:
-                return Task.FromResult(MenuResult.NotValidOption);
+                return MenuResult.NotValidOption;
         }
     }
 }

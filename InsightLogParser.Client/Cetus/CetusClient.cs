@@ -114,6 +114,13 @@ internal class CetusClient : ICetusClient
         return reply?.Code;
     }
 
+    public async Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request)
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug("CETUS: Requesting puzzle status");
+        return await MakePostAsync<PuzzleStatusResponse, PuzzleStatusRequest>("api/v1/puzzle/status", request);
+    }
+
     private async Task<TResponse?> MakePostAsync<TResponse, TRequest>(string requestUri, TRequest request, bool isRetry = false)
     {
         try
@@ -155,6 +162,14 @@ internal class CetusClient : ICetusClient
         await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
         _messageWriter.WriteDebug($"CETUS: Requesting sightings for {zone} {type}");
         return await MakeGetAsync<Sighting[]>($"api/v1.0/Puzzle/sightings/{(int)zone}/{(int)type}")
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
+    public async Task<ZoneUnsolvedResponse?> GetSightedUnsolved(PuzzleZone zone)
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug($"CETUS: Requesting unsolved sightings for {zone}");
+        return await MakeGetAsync<ZoneUnsolvedResponse>($"api/v1/zone/{(int)zone}/unsolved/")
             .ConfigureAwait(ConfigureAwaitOptions.None);
     }
 

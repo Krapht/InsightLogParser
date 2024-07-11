@@ -1,6 +1,31 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InsightLogParser.Common.PuzzleParser;
+
+public class SerializedSubComponent
+{
+    [JsonPropertyName("RelativeTransform")]
+    public string? RelativeTransform { get; set; }
+
+    [JsonPropertyName("bUseForDungeonIdentification")]
+    public bool UseForDungeonIdentification { get; set; }
+
+    [JsonPropertyName("acceptAllByDefault")]
+    public bool AcceptAllByDefault { get; set; }
+
+    [JsonPropertyName("bBlockSpawning")]
+    public bool BlockSpawning { get; set; }
+
+    [JsonPropertyName("acceptedTypes")]
+    public string? AcceptedTypes { get; set; }
+
+    [JsonPropertyName("WorldTransform")]
+    public string? WorldTransform { get; set; }
+
+    [JsonPropertyName("Box")]
+    public string? Box { get; set; }
+}
 
 public class SerializedInfo
 {
@@ -46,8 +71,11 @@ public class SerializedInfo
     [JsonPropertyName("IncompatibleKrakenIDs")]
     public string? IncompatibleKrakenIDs { get; set; }
 
-    [JsonPropertyName("SERIALIZEDSUBCOMP_PuzzleBounds")]
-    public string? SERIALIZEDSUBCOMP_PuzzleBounds { get; set; }
+    [JsonPropertyName("SERIALIZEDSUBCOMP_PuzzleBounds-0")]
+    public JsonElement? SubComponent0 { get; set; }
+
+    [JsonPropertyName("SERIALIZEDSUBCOMP_PuzzleBounds-1")]
+    public JsonElement? SubComponent1 { get; set; }
 
     [JsonPropertyName("ghostType")]
     public int? GhostType { get; set; }
@@ -81,4 +109,7 @@ public class SerializedInfo
 
     [JsonPropertyName("Mesh2Transform")]
     public string? Mesh2Transform { get; set; }
+
+    [JsonPropertyName("shinyMeshTransform")]
+    public string? ShinyMeshTransform { get; set; }
 }

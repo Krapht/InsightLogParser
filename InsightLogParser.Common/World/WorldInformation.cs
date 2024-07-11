@@ -411,21 +411,6 @@ public class WorldInformation
         }
     }
 
-    public static double GetDistance2d(Coordinate a, Coordinate b)
-    {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
-    }
-
-    public static double GetDistance3d(Coordinate a, Coordinate b)
-    {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
-        var dz = a.Z - b.Z;
-        return Math.Sqrt(dx * dx + dy * dy + dz * dz);
-    }
-
     public static IReadOnlyList<PuzzleInformation> GetPuzzlesInZone(PuzzleZone zone)
     {
         if (!Zones.TryGetValue(zone, out var zoneEntry)) return new List<PuzzleInformation>();

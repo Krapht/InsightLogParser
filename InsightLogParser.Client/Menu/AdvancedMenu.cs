@@ -4,17 +4,13 @@ namespace InsightLogParser.Client.Menu;
 
 internal class AdvancedMenu : IMenu
 {
-    private readonly MenuHandler _menuHandler;
     private readonly UserComputer _computer;
     private readonly MessageWriter _writer;
-    private readonly Spider _spider;
 
-    public AdvancedMenu(MenuHandler menuHandler, UserComputer computer, MessageWriter writer, Spider spider)
+    public AdvancedMenu(UserComputer computer, MessageWriter writer)
     {
-        _menuHandler = menuHandler;
         _computer = computer;
         _writer = writer;
-        _spider = spider;
     }
 
     public IEnumerable<(char? key, string text)> MenuOptions
@@ -22,10 +18,6 @@ internal class AdvancedMenu : IMenu
         get
         {
             yield return (null, "Advanced or risky operations. Press [h] to display this menu again and backspace to back");
-            if (_spider.IsOnline())
-            {
-                yield return ('w', "Log-in to cetus web ui");
-            }
             yield return ('c', "Cleanup steam screenshot.vdf file (at your own risk)");
         }
     }
@@ -34,9 +26,6 @@ internal class AdvancedMenu : IMenu
     {
         switch (keyChar)
         {
-            case 'w':
-                await _spider.OpenCetusWebAsync().ConfigureAwait(ConfigureAwaitOptions.None);
-                return MenuResult.Ok;
             case 'c':
                 ConfirmSteamScreenshotCleanup();
                 return MenuResult.PrintMenu;

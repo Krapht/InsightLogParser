@@ -18,9 +18,19 @@ namespace InsightLogParser.Client.Cetus
             return Task.FromResult<ScreenshotResponse?>(null);
         }
 
+        public Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request)
+        {
+            return Task.FromResult<PuzzleStatusResponse?>(null);
+        }
+
         public Task<string?> GetSigninCodeAsync()
         {
             return Task.FromResult<string?>(null);
+        }
+
+        public Task<ZoneUnsolvedResponse?> GetSightedUnsolved(PuzzleZone zone)
+        {
+            return Task.FromResult<ZoneUnsolvedResponse?>(null);
         }
 
         public Task<SeenResponse?> PostSeenAsync(PlayerReport request)
