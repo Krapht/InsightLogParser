@@ -18,6 +18,11 @@ namespace InsightLogParser.Client.Cetus
             return Task.FromResult<ScreenshotResponse?>(null);
         }
 
+        public Task<ImportSaveResponse?> ImportSaveGameAsync(Stream saveGameStream)
+        {
+            return Task.FromResult<ImportSaveResponse?>(null);
+        }
+
         public Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request)
         {
             return Task.FromResult<PuzzleStatusResponse?>(null);

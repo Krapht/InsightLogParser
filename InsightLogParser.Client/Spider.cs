@@ -485,6 +485,43 @@ namespace InsightLogParser.Client
             _teleportManager.SetTarget(furthest);
         }
 
+        public async Task ImportSaveGameAsync()
+        {
+            var saveFilePath = _computer.GetOfflineSaveFile();
+            if (!File.Exists(saveFilePath))
+            {
+                _messageWriter.WriteError($"Could not find file '{saveFilePath}'");
+                return;
+            }
+
+            ImportSaveResponse? response;
+            await using (var fs = File.OpenRead(saveFilePath))
+            {
+                response = await _cetusClient.ImportSaveGameAsync(fs);
+            }
+
+            if (response == null)
+            {
+                _messageWriter.WriteError("Something went wrong");
+                return;
+            }
+
+            var allSolvedIds = response
+                .AllSolves
+                .OrderBy(x => x)
+                .Select(x => x.ToString());
+
+            const string solvedPuzzleIdFile = "solvedpuzzleids.txt";
+            _messageWriter.WriteInfo($"Saving {response.AllSolves.Length} solved puzzle ids to " + solvedPuzzleIdFile);
+            await File.WriteAllTextAsync(solvedPuzzleIdFile, string.Join(",", allSolvedIds));
+
+            _messageWriter.WriteInfo($"Server flagged {response.ImportedSolves.Length} previously unsolved puzzles as solved");
+            _messageWriter.WriteInfo($"Server flagged {response.RemovedStales.Length} previously solved puzzles as unsolved as they were stale");
+
+            //Update local db
+            _db.ImportSaves(response.ImportedSolves, response.AllSolves.ToHashSet(), response.MostRecentSolve);
+        }
+
         public async Task ListClosestAsync(int numberToList, bool use2dDistance)
         {
             var lastTeleport = _teleportManager.GetLastTeleport();

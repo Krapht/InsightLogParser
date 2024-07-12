@@ -19,6 +19,7 @@ internal interface ICetusClient : IDisposable
     Task<SeenResponse?> PostSeenAsync(PlayerReport request);
     Task<SolvedResponse?> PostSolvedAsync(PlayerReport request);
     Task<ScreenshotResponse?> PostScreenshotAsync(Screenshot screenshot);
+    Task<ImportSaveResponse?> ImportSaveGameAsync(Stream saveGameStream);
 
     //"Search" operations
     Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request);

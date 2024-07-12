@@ -55,7 +55,7 @@ internal class RootMenu : IMenu
                 _menuHandler.EnterMenu(new RouteMenu(_menuHandler, _spider));
                 return MenuResult.Ok;
             case 'a':
-                _menuHandler.EnterMenu(new AdvancedMenu(_computer, _writer));
+                _menuHandler.EnterMenu(new AdvancedMenu(_computer, _writer, _spider));
                 return MenuResult.Ok;
             case 'C':
                 _menuHandler.EnterMenu(new CheeseMenu(_spider, _writer));

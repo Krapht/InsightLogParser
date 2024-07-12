@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using InsightLogParser.Common.ApiModels;
 using InsightLogParser.Common.ParsedDbModels;
 using InsightLogParser.Common.PuzzleParser;
 using InsightLogParser.Common.World;
@@ -317,7 +318,74 @@ namespace InsightLogParser.Client
             }
         }
 
-        private void MakeBackup()
+        public void ImportSaves(ImportSolve[] importedSolves, HashSet<int> allSolvedIds, DateTimeOffset mostRecentSolveTime)
+        {
+            lock (_lock)
+            {
+                foreach (var puzzleZone in _db.Zones.Keys)
+                {
+                    var zoneNode = _db.Zones[puzzleZone];
+                    foreach (var type in zoneNode.SolvedEntries.Keys)
+                    {
+                        var localSolves = zoneNode.SolvedEntries[type];
+
+                        //Add new solves
+                        var imported = importedSolves
+                            .Where(x => x.PuzzleZone == puzzleZone && x.PuzzleType == type)
+                            .ToList();
+                        var importedCounter = 0;
+                        foreach (var importSolve in imported)
+                        {
+                            if (!localSolves.ContainsKey(importSolve.PuzzleId))
+                            {
+                                localSolves.Add(importSolve.PuzzleId, new PuzzleNode
+                                {
+                                    Solves = [importSolve.SolvedAt]
+                                });
+                                _dirty = true;
+                                importedCounter++;
+                            }
+                        }
+
+                        //Remove stale solves
+                        var stales = new List<(int puzzleId, PuzzleNode node)>();
+                        foreach (var (puzzleId, node) in localSolves)
+                        {
+                            //If it is solved, it is not stale
+                            if (allSolvedIds.Contains(puzzleId)) continue;
+
+                            //If we have a solve after the most recent time, we can't say if it's stale or not
+                            if (node.Solves.Any(x => x >= mostRecentSolveTime)) continue;
+
+                            stales.Add((puzzleId, node));
+                        }
+
+                        foreach (var valueTuple in stales)
+                        {
+                            localSolves.Remove(valueTuple.puzzleId);
+                            _dirty = true;
+                        }
+                        var puzzleName = WorldInformation.GetPuzzleName(type);
+                        var zoneName = WorldInformation.GetZoneName(puzzleZone);
+
+                        if (importedCounter > 0) _messageWriter.WriteInfo($"Imported {importedCounter} solves of {puzzleName} from {zoneName} to local db", ConsoleColor.Green);
+                        if (stales.Count > 0) _messageWriter.WriteInfo($"Removed {stales.Count} stale local solves of {puzzleName} from {zoneName}", ConsoleColor.Yellow);
+                    }
+                }
+
+                if (_dirty)
+                {
+                    var backupPath = MakeBackup();
+                    _messageWriter.WriteInfo($"Changes will be made to the local db, a backup has been saved at {backupPath}", ConsoleColor.Yellow);
+                }
+                else
+                {
+                    _messageWriter.WriteInfo("Local db was already up to date");
+                }
+            }
+        }
+
+        private string MakeBackup()
         {
             var pathPart = Path.GetDirectoryName(_jsonPath);
             if (string.IsNullOrWhiteSpace(pathPart)) pathPart = ".";
@@ -326,6 +394,7 @@ namespace InsightLogParser.Client
             var timestring = DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
             var backupName = $"{filePart}-backup-{timestring}{extensionPart}";
             File.Copy(_jsonPath, backupName);
+            return backupName;
         }
 
         public bool IsSolved(int puzzleKrakenId)

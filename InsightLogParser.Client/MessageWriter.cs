@@ -69,16 +69,18 @@ internal class MessageWriter
         }
     }
 
-    public void WriteInfo(string infoLine)
+    public void WriteInfo(string infoLine, ConsoleColor color)
     {
         lock (_lock)
         {
-            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.ForegroundColor = color;
             Console.Write("[INFO]");
             Console.ResetColor();
             Console.WriteLine($": {infoLine}");
         }
     }
+
+    public void WriteInfo(string infoLine) => WriteInfo(infoLine, ConsoleColor.DarkGreen);
 
     public void WriteDebug(string debugMessage)
     {
@@ -466,6 +468,22 @@ internal class MessageWriter
             Console.WriteLine("This operation will modify that file to remove any entries to Insight screenshots that no longer exists");
             Console.WriteLine("Please be aware that just because it works for me does not mean it will work for you");
             Console.WriteLine("*** For this to work, steam must be fully closed down ***");
+            Console.WriteLine("At your own risk, press [y] three times to proceed or any other key to cancel");
+            Console.ResetColor();
+        }
+    }
+
+    public void ConfirmOfflineSaveUpload()
+    {
+        lock (_lock)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("This will upload your offline save to extract solved puzzles from it");
+            Console.WriteLine("The server will add solves for all relevant solved puzzles from your offline save");
+            Console.WriteLine("Additionally it will REMOVE any solved puzzles not marked as solved in your offline save that are dated EARLIER than the MOST RECENT solved puzzle in your offline save");
+            Console.WriteLine("This will clean up any stale solves you might have that are not actually counted by the game");
+            Console.WriteLine("Please be aware that just because it works for me does not mean it will work for you");
+            Console.WriteLine("*** Before using this, make sure that your offline save file is fully up to date with your online save ***");
             Console.WriteLine("At your own risk, press [y] three times to proceed or any other key to cancel");
             Console.ResetColor();
         }

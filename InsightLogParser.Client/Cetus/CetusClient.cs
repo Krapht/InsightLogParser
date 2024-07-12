@@ -198,4 +198,31 @@ internal class CetusClient : ICetusClient
             return default;
         }
     }
+
+    public async Task<ImportSaveResponse?> ImportSaveGameAsync(Stream saveGameStream)
+    {
+        //There is no retry with this one, so get a fresh token
+        var authResult = await RefreshAuthAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+        if (!authResult) return default;
+
+        var requestUri = "api/v1/sync/syncWithSave";
+
+        try
+        {
+            var content = new StreamContent(saveGameStream);
+            var result = await _httpClient.PostAsync(requestUri, content)
+                .ConfigureAwait(ConfigureAwaitOptions.None);
+            _messageWriter.WriteDebug($"CETUS: Got a {(int)result.StatusCode}-{result.StatusCode}");
+            if (!result.IsSuccessStatusCode)
+            {
+                return default;
+            }
+            return await result.Content.ReadFromJsonAsync<ImportSaveResponse>().ConfigureAwait(ConfigureAwaitOptions.None);
+        }
+        catch (Exception e)
+        {
+            _messageWriter.WriteDebug($"CETUS: Exception: {e}");
+            return default;
+        }
+    }
 }

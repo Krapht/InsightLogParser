@@ -69,6 +69,19 @@ internal class UserComputer
         return logFile;
     }
 
+    public string GetOfflineSaveFile()
+    {
+        if (!string.IsNullOrWhiteSpace(_configuration.ForcedOfflineSaveFile))
+        {
+            return _configuration.ForcedOfflineSaveFile;
+        }
+        else
+        {
+            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            return Path.Combine(appDataFolder, "IslandsofInsight", "Saved", "SaveGames", "OfflineSavegame.sav");
+        }
+    }
+
     private string[]? FindSteamGameLibraryLocations()
     {
         //Find the steam install directory in the registry

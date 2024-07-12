@@ -3,7 +3,7 @@ namespace InsightLogParser.Client;
 
 public class Configuration
 {
-    public static readonly int CurrentConfigurationVersion = 2;
+    public static readonly int CurrentConfigurationVersion = 3;
 
     public int ConfigVersion { get; set; } = CurrentConfigurationVersion;
 
@@ -11,6 +11,8 @@ public class Configuration
     public string? ForceGameRootFolder { get; set; }
     public string? ForcedParsedDatabasePath { get; set; }
     public string? ForceScreenshotFolder { get; set; }
+    public string? ForcedOfflineSaveFile { get; set; }
+
     public bool MonitorScreenshots { get; set; } = true;
     public bool ConfirmScreenshotDelete { get; set; } = true;
     public bool DeleteOnQuickUpload { get; set; } = false;
