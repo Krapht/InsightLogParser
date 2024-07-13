@@ -65,7 +65,6 @@ namespace InsightLogParser.Client
             _messageWriter.ConnectedToServer(serverAddress);
         }
 
-
         public void EndSession(DateTimeOffset timestamp)
         {
             _sessionStart = null;
@@ -200,13 +199,13 @@ namespace InsightLogParser.Client
 
         private bool ShouldHandlePuzzle(int puzzleId, PuzzleZone zone, PuzzleType type)
         {
-            if (ShouldSkipZone(zone))
+            if (WorldInformation.ShouldSkipZone(zone))
             {
                 _messageWriter.WriteDebug($"Skipping puzzle in {WorldInformation.GetZoneName(zone)}");
                 return false;
             }
 
-            if (ShouldSSkipPuzzleType(type))
+            if (WorldInformation.ShouldSkipPuzzleType(type))
             {
                 _messageWriter.WriteDebug($"Skipping {WorldInformation.GetPuzzleName(type)} puzzle");
                 return false;
@@ -230,29 +229,6 @@ namespace InsightLogParser.Client
         public async Task ClosedAsync(DateTimeOffset timestamp, int puzzleId, PuzzleZone zone, PuzzleType type, short? difficulty)
         {
             await Task.Yield();
-        }
-
-        private bool ShouldSkipZone(PuzzleZone zone)
-        {
-            switch (zone)
-            {
-                case PuzzleZone.Unknown:
-                    return true;
-                default: return false;
-            }
-        }
-
-        private bool ShouldSSkipPuzzleType(PuzzleType type)
-        {
-            switch (type)
-            {
-                case PuzzleType.Unknown:
-                case PuzzleType.ArmillaryRings:
-                case PuzzleType.Skydrop:
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         public void WriteRawLogLine(string line)
@@ -515,8 +491,8 @@ namespace InsightLogParser.Client
             _messageWriter.WriteInfo($"Saving {response.AllSolves.Length} solved puzzle ids to " + solvedPuzzleIdFile);
             await File.WriteAllTextAsync(solvedPuzzleIdFile, string.Join(",", allSolvedIds));
 
-            _messageWriter.WriteInfo($"Server flagged {response.ImportedSolves.Length} previously unsolved puzzles as solved");
-            _messageWriter.WriteInfo($"Server flagged {response.RemovedStales.Length} previously solved puzzles as unsolved as they were stale");
+            _messageWriter.WriteInfo($"Server flagged {response.ServerAddedCount} previously unsolved puzzles as solved");
+            _messageWriter.WriteInfo($"Server flagged {response.ServerRemovedCount} previously solved puzzles as unsolved as they were stale");
 
             //Update local db
             _db.ImportSaves(response.ImportedSolves, response.AllSolves.ToHashSet(), response.MostRecentSolve);

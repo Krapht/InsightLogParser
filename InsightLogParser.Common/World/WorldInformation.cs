@@ -425,4 +425,27 @@ public class WorldInformation
         if (!zoneEntry.Puzzles.TryGetValue(type, out var puzzleEntry)) return null;
         return puzzleEntry.CycleTime;
     }
+
+    public static bool ShouldSkipZone(PuzzleZone zone)
+    {
+        switch (zone)
+        {
+            case PuzzleZone.Unknown:
+                return true;
+            default: return false;
+        }
+    }
+
+    public static bool ShouldSkipPuzzleType(PuzzleType type)
+    {
+        switch (type)
+        {
+            case PuzzleType.Unknown:
+            case PuzzleType.ArmillaryRings:
+            case PuzzleType.Skydrop:
+                return true;
+            default:
+                return false;
+        }
+    }
 }

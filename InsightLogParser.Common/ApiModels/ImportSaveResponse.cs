@@ -27,11 +27,16 @@ namespace InsightLogParser.Common.ApiModels
         [JsonPropertyName("mostRecentSolve")]
         public DateTimeOffset MostRecentSolve { get; set; }
 
+        [JsonPropertyName("serverAddedCount")]
+        public int ServerAddedCount { get; set; }
+
+        [JsonPropertyName("serverRemovedCount")]
+        public int ServerRemovedCount { get; set; }
+
         [JsonPropertyName("importedSolves")]
         public ImportSolve[] ImportedSolves { get; set; }
 
         [JsonPropertyName("removedStaleSolves")]
-        public ImportSolve[] RemovedStales { get; set; }
-
+        public ImportSolve[] RemovedStales { get; set; } = [];
     }
 }

@@ -324,17 +324,27 @@ namespace InsightLogParser.Client
             {
                 foreach (var puzzleZone in _db.Zones.Keys)
                 {
+                    if (WorldInformation.ShouldSkipZone(puzzleZone)) continue;
+
                     var zoneNode = _db.Zones[puzzleZone];
-                    foreach (var type in zoneNode.SolvedEntries.Keys)
+                    var importedZonePuzzlesByType = importedSolves
+                        .Where(x => x.PuzzleZone == puzzleZone)
+                        .GroupBy(x => x.PuzzleType);
+
+                    foreach (var importedZonePuzzle in importedZonePuzzlesByType)
                     {
-                        var localSolves = zoneNode.SolvedEntries[type];
+                        var puzzleType = importedZonePuzzle.Key;
+
+                        if (WorldInformation.ShouldSkipPuzzleType(puzzleType)) continue;
+                        if (!zoneNode.SolvedEntries.ContainsKey(puzzleType))
+                        {
+                            zoneNode.SolvedEntries.Add(puzzleType, new Dictionary<int, PuzzleNode>());
+                        }
+                        var localSolves = zoneNode.SolvedEntries[puzzleType];
 
                         //Add new solves
-                        var imported = importedSolves
-                            .Where(x => x.PuzzleZone == puzzleZone && x.PuzzleType == type)
-                            .ToList();
                         var importedCounter = 0;
-                        foreach (var importSolve in imported)
+                        foreach (var importSolve in importedZonePuzzle)
                         {
                             if (!localSolves.ContainsKey(importSolve.PuzzleId))
                             {
@@ -365,7 +375,8 @@ namespace InsightLogParser.Client
                             localSolves.Remove(valueTuple.puzzleId);
                             _dirty = true;
                         }
-                        var puzzleName = WorldInformation.GetPuzzleName(type);
+
+                        var puzzleName = WorldInformation.GetPuzzleName(puzzleType);
                         var zoneName = WorldInformation.GetZoneName(puzzleZone);
 
                         if (importedCounter > 0) _messageWriter.WriteInfo($"Imported {importedCounter} solves of {puzzleName} from {zoneName} to local db", ConsoleColor.Green);
@@ -376,7 +387,10 @@ namespace InsightLogParser.Client
                 if (_dirty)
                 {
                     var backupPath = MakeBackup();
-                    _messageWriter.WriteInfo($"Changes will be made to the local db, a backup has been saved at {backupPath}", ConsoleColor.Yellow);
+                    if (backupPath != null)
+                    {
+                        _messageWriter.WriteInfo($"Changes will be made to the local db, a backup has been saved at {backupPath}", ConsoleColor.Yellow);
+                    }
                 }
                 else
                 {
@@ -385,8 +399,9 @@ namespace InsightLogParser.Client
             }
         }
 
-        private string MakeBackup()
+        private string? MakeBackup()
         {
+            if (!File.Exists(_jsonPath)) return null; //If there is no current database, there is nothing to back up
             var pathPart = Path.GetDirectoryName(_jsonPath);
             if (string.IsNullOrWhiteSpace(pathPart)) pathPart = ".";
             var filePart = Path.GetFileNameWithoutExtension(_jsonPath);
