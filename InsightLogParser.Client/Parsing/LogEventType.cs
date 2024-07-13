@@ -9,4 +9,5 @@ public enum LogEventType
     PuzzleEvent,
     Teleport,
     JoinedServer,
+    ConnectingToServer,
 }

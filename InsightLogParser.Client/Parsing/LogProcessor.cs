@@ -104,6 +104,9 @@ namespace InsightLogParser.Client.Parsing
                             case LogEventType.SessionStart:
                                 _spider.StartSession(logEvent.LogTime);
                                 break;
+                            case LogEventType.ConnectingToServer:
+                                _spider.ConnectingToServer(logEvent.ServerAddress!);
+                                break;
 
                             case LogEventType.JoinedServer:
                                 _spider.SetServer(logEvent.ServerAddress!);

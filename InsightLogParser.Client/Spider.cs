@@ -21,6 +21,7 @@ namespace InsightLogParser.Client
         private readonly UserComputer _computer;
         private readonly TeleportManager _teleportManager;
         private readonly PuzzleRouter _puzzleRouter;
+        private readonly ServerTracker _serverTracker;
         private ScreenshotManager? _screenshotManager = null;
 
         //State
@@ -37,6 +38,7 @@ namespace InsightLogParser.Client
             , UserComputer computer
             , TeleportManager teleportManager
             , PuzzleRouter puzzleRouter
+            , ServerTracker serverTracker
             )
         {
             _messageWriter = messageWriter;
@@ -49,6 +51,7 @@ namespace InsightLogParser.Client
             _computer = computer;
             _teleportManager = teleportManager;
             _puzzleRouter = puzzleRouter;
+            _serverTracker = serverTracker;
         }
 
         public void SetScreenshotManager(ScreenshotManager screenshotManager)  { _screenshotManager = screenshotManager; }
@@ -62,7 +65,13 @@ namespace InsightLogParser.Client
         public void SetServer(string serverAddress)
         {
             _serverAddress = serverAddress;
+            _serverTracker.Connected(serverAddress);
             _messageWriter.ConnectedToServer(serverAddress);
+        }
+
+        public void ConnectingToServer(string serverAddress)
+        {
+            _serverTracker.Connect(serverAddress);
         }
 
         public void EndSession(DateTimeOffset timestamp)

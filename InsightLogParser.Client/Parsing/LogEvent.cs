@@ -5,7 +5,7 @@ namespace InsightLogParser.Client.Parsing;
 
 internal class LogEvent
 {
-    public LogEventType Type { get; set; }
+    public required LogEventType Type { get; set; }
     public DateTimeOffset LogTime { get; set; }
     public ParsedLogEvent? Event { get; set; }
     public Coordinate? Coordinate { get; set; } = null;

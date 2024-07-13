@@ -608,4 +608,34 @@ internal class MessageWriter
             Console.WriteLine();
         }
     }
+
+    public void WriteServerConnection(IReadOnlyList<string> previousServers, string currentServer)
+    {
+        lock (_lock)
+        {
+            Console.WriteLine("Connecting to: ");
+            var found = false;
+            foreach (var (server, i) in previousServers.Select((x,i) => (x,i)))
+            {
+                if (server == currentServer)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"\t#{i+1}: {server}");
+                    Console.ResetColor();
+                    found = true;
+                }
+                else
+                {
+                    Console.WriteLine($"\t#{i+1}: {server}");
+                }
+            }
+
+            if (!found)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\t#*: {currentServer}");
+                Console.ResetColor();
+            }
+        }
+    }
 }

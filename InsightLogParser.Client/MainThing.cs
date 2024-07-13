@@ -59,7 +59,8 @@ public class MainThing
 
         _messageWriter.WriteInitLine("Poking spider", ConsoleColor.Green);
         var puzzleIterator = new PuzzleRouter(_messageWriter);
-        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler, computer, teleportManager, puzzleIterator);
+        var serverTracker = new ServerTracker(_messageWriter);
+        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler, computer, teleportManager, puzzleIterator, serverTracker);
 
         //Screenshots only makes sense in online mode
         if (spider.IsOnline() && configuration.MonitorScreenshots)
