@@ -8,13 +8,15 @@ internal class PuzzleRouter
     private const int MaxPuzzlesPerQuadrant = 10;
 
     private readonly MessageWriter _writer;
+    private readonly Configuration _configuration;
     private List<RouteNode> _sequence = [];
     private int? _sequenceIndex;
     private HashSet<int> _solvedForCurrentRoute = new();
 
-    public PuzzleRouter(MessageWriter writer)
+    public PuzzleRouter(MessageWriter writer, Configuration configuration)
     {
         _writer = writer;
+        _configuration = configuration;
     }
 
     private IEnumerable<Quadrant> Divide(Quadrant outer)
@@ -128,7 +130,7 @@ internal class PuzzleRouter
     public void SetRoute(IEnumerable<RouteNode> puzzles, Coordinate startCoordinate)
     {
         var valid = puzzles
-            .Where(x => x.Puzzle.PrimaryCoordinate != null)
+            .Where(x => x.Puzzle.PrimaryCoordinate != null && (_configuration.IncludeStalePuzzlesInRoutes || !(x.Stale.HasValue && x.Stale.Value)))
             .ToList();
 
         if (valid.Count == 0)
