@@ -138,6 +138,58 @@ namespace InsightLogParser.UI {
                 lblPuzzleType.Text = $"{Regex.Replace(_puzzleType.ToString(), "(\\B[A-Z])", " $1")}{(_routeLength > 0 ? $" ({_routeNumber}/{_routeLength})" : "")}";
 
                 lblID.Text = _puzzleId.ToString();
+
+                var locationX = (_location.X + 102844) / 32.88 + 1450;
+                var locationY = (_location.Y + 104171) / 32.96 + 572;
+                var targetX = (_target.X + 102844) / 32.88 + 1450;
+                var targetY = (_target.Y + 104171) / 32.96 + 572;
+                var centerX = (locationX + targetX) / 2;
+                var centerY = (locationY + targetY) / 2;
+
+                // Load the full map
+                var fullMap = Properties.Resources.Map;
+
+                // Calculate the distance between location and target
+                var distanceX = Math.Abs(locationX - targetX);
+                var distanceY = Math.Abs(locationY - targetY);
+
+                // Add buffer to the distance
+                var buffer = 100; // Buffer in pixels
+                var maxDistance = Math.Max(distanceX, distanceY);
+                var zoomSize = maxDistance + 2 * buffer;
+
+                // Ensure the zoom dimensions are at least as large as the picture box dimensions
+                zoomSize = Math.Max(zoomSize, Math.Max(picMap.Width, picMap.Height));
+
+                // Ensure we don't zoom in too much
+                zoomSize = Math.Min(zoomSize, Math.Min(fullMap.Width, fullMap.Height));
+
+                var zoomRect = new Rectangle((int)(centerX - zoomSize / 2), (int)(centerY - zoomSize / 2), (int)Math.Round(zoomSize), (int)Math.Round(zoomSize));
+
+                // Create a bitmap for the zoomed map
+                var zoomedMap = new Bitmap(picMap.Width, picMap.Height);
+
+                using (Graphics g = Graphics.FromImage(zoomedMap)) {
+                    // Draw the zoomed area of the map
+                    g.DrawImage(fullMap, new Rectangle(0, 0, picMap.Width, picMap.Height), zoomRect, GraphicsUnit.Pixel);
+
+                    // Draw a green line from the location to the target
+                    using (var pen = new Pen(Color.Green, 3)) {
+                        g.DrawLine(pen, new Point((int)(locationX - zoomRect.X), (int)(locationY - zoomRect.Y)), new Point((int)(targetX - zoomRect.X), (int)(targetY - zoomRect.Y)));
+                    }
+
+                    // Draw the location as the compass
+                    var mapCompass = new Bitmap(picCompass.Image, new Size(picCompass.Image.Width / 2, picCompass.Image.Height / 2));
+                    g.DrawImage(mapCompass, new Point((int)(locationX - zoomRect.X - mapCompass.Width / 2), (int)(locationY - zoomRect.Y - mapCompass.Height / 2)));
+
+                    // Draw the target as the current marker
+                    var currentMarker = new Bitmap(Properties.Resources.CurrentMarker, new Size(Properties.Resources.CurrentMarker.Width / 4, Properties.Resources.CurrentMarker.Height / 4));
+                    g.DrawImage(currentMarker, new Point((int)(targetX - zoomRect.X - currentMarker.Width / 2), (int)(targetY - zoomRect.Y - currentMarker.Height / 2)));
+                }
+
+                // Set the zoomed map to picMap
+                picMap.Image = zoomedMap;
+                picMap.Update();
             } catch (Exception ex) {
                 MessageBox.Show(ex.Message);
             }

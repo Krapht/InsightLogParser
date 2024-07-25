@@ -32,11 +32,15 @@
             picArrow = new PictureBox();
             lblPuzzleType = new Label();
             lblID = new Label();
+            tableLayoutPanel1 = new TableLayoutPanel();
+            picMap = new PictureBox();
             pnlMain.SuspendLayout();
             pnlTarget.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picPuzzleType).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picCompass).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picArrow).BeginInit();
+            tableLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)picMap).BeginInit();
             SuspendLayout();
             // 
             // pnlMain
@@ -44,6 +48,7 @@
             pnlMain.ColumnCount = 1;
             pnlMain.ColumnStyles.Add(new ColumnStyle());
             pnlMain.Controls.Add(pnlTarget, 0, 0);
+            pnlMain.Controls.Add(tableLayoutPanel1, 0, 1);
             pnlMain.Dock = DockStyle.Fill;
             pnlMain.Location = new Point(0, 0);
             pnlMain.Margin = new Padding(0);
@@ -146,7 +151,8 @@
             lblPuzzleType.Dock = DockStyle.Fill;
             lblPuzzleType.Font = new Font("Segoe UI", 36F);
             lblPuzzleType.ForeColor = Color.White;
-            lblPuzzleType.Location = new Point(385, 0);
+            lblPuzzleType.Location = new Point(382, 0);
+            lblPuzzleType.Margin = new Padding(0);
             lblPuzzleType.Name = "lblPuzzleType";
             lblPuzzleType.Size = new Size(1, 65);
             lblPuzzleType.TabIndex = 5;
@@ -157,11 +163,39 @@
             lblID.Dock = DockStyle.Fill;
             lblID.Font = new Font("Segoe UI", 36F);
             lblID.ForeColor = Color.White;
-            lblID.Location = new Point(391, 0);
+            lblID.Location = new Point(382, 0);
+            lblID.Margin = new Padding(0);
             lblID.Name = "lblID";
-            lblID.Size = new Size(406, 65);
+            lblID.Size = new Size(418, 65);
             lblID.TabIndex = 6;
             lblID.TextAlign = ContentAlignment.TopRight;
+            // 
+            // tableLayoutPanel1
+            // 
+            tableLayoutPanel1.ColumnCount = 2;
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel1.Controls.Add(picMap, 0, 0);
+            tableLayoutPanel1.Dock = DockStyle.Fill;
+            tableLayoutPanel1.Location = new Point(0, 64);
+            tableLayoutPanel1.Margin = new Padding(0);
+            tableLayoutPanel1.Name = "tableLayoutPanel1";
+            tableLayoutPanel1.RowCount = 1;
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanel1.Size = new Size(800, 386);
+            tableLayoutPanel1.TabIndex = 1;
+            // 
+            // picMap
+            // 
+            picMap.Dock = DockStyle.Fill;
+            picMap.Image = Properties.Resources.Map;
+            picMap.Location = new Point(0, 0);
+            picMap.Margin = new Padding(0);
+            picMap.Name = "picMap";
+            picMap.Size = new Size(400, 386);
+            picMap.SizeMode = PictureBoxSizeMode.StretchImage;
+            picMap.TabIndex = 0;
+            picMap.TabStop = false;
             // 
             // Main
             // 
@@ -178,6 +212,8 @@
             ((System.ComponentModel.ISupportInitialize)picPuzzleType).EndInit();
             ((System.ComponentModel.ISupportInitialize)picCompass).EndInit();
             ((System.ComponentModel.ISupportInitialize)picArrow).EndInit();
+            tableLayoutPanel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)picMap).EndInit();
             ResumeLayout(false);
         }
 
@@ -192,5 +228,7 @@
         private PictureBox picArrow;
         private Label lblPuzzleType;
         private Label lblID;
+        private TableLayoutPanel tableLayoutPanel1;
+        private PictureBox picMap;
     }
 }
