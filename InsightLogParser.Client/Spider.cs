@@ -150,6 +150,14 @@ namespace InsightLogParser.Client
             }
 
             _messageWriter.WriteEndSolved();
+
+            // If we solved a puzzle, we're obviously at that puzzle, so let's move to it if we have a coordinate for it.
+            var puzzle = _gamePuzzleHandler.PuzzleDatabase.Values.Where(p => p.KrakenId == puzzleId).FirstOrDefault();
+            if (puzzle != null && puzzle.PrimaryCoordinate.HasValue)
+            {
+                _teleportManager.Teleport(puzzle.PrimaryCoordinate!.Value);
+            }
+
             RouteHandleSolved(puzzleId);
 
             _screenshotManager?.SetLastPuzzle(puzzleId, true);
@@ -573,7 +581,11 @@ namespace InsightLogParser.Client
             _puzzleRouter.AddSolved(puzzleId);
             var current = _puzzleRouter.CurrentNode();
             if (current == null) return;
-            if (current.Value.Node.Puzzle.KrakenId != puzzleId) return;
+            if (current.Value.Node.Puzzle.KrakenId != puzzleId)
+            {
+                // Retarget the current node if it's not the one we just solved.
+                _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value);
+            }
 
             NextRouteWaypoint();
         }
@@ -650,10 +662,9 @@ namespace InsightLogParser.Client
 
         public void NextRouteWaypoint()
         {
-            var current = _puzzleRouter.CurrentNode();
-            var currentCoordinate = current?.Node.Puzzle.PrimaryCoordinate!.Value ?? _teleportManager.GetLastTeleport() ?? default;
-
             var next = _puzzleRouter.NextNode();
+            var currentCoordinate = _teleportManager.GetLastTeleport() ?? default;
+
             if (next == null) return;
 
             _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value);
@@ -681,10 +692,14 @@ namespace InsightLogParser.Client
         public void PreviousRouteWaypoint()
         {
             var previous = _puzzleRouter.PreviousNode();
+            var currentCoordinate = _teleportManager.GetLastTeleport() ?? default;
+
             if (previous == null) return;
             _teleportManager.SetTarget(previous.Value.Node.Puzzle.PrimaryCoordinate!.Value);
             WriteWaypointMessage(previous.Value.Node, previous.Value.Index, previous.Value.Max);
+            TeleportManager.WriteDistance(currentCoordinate, previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
         }
+
         public bool HasRoute()
         {
             return _puzzleRouter.HasRoute();
