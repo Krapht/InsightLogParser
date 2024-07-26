@@ -18,18 +18,18 @@ internal class TeleportManager
     {
         if (destination.X == 0 || destination.Y == 0 || destination.Z == 0)
         {
-            _writer.WriteDebug("Ignored teleport to 0");
+            _writer.WriteTeleportDebug("Ignored teleport to 0");
             return;
         }
         if ((DateTimeOffset.UtcNow - _lastTeleportTime).TotalMilliseconds < 1000)
         {
-            _writer.WriteDebug("Teleport on cooldown");
+            _writer.WriteTeleportDebug("Teleport on cooldown");
             return;
         }
 
         _lastTeleport = destination;
         _lastTeleportTime = DateTimeOffset.UtcNow;
-        _writer.WriteDebug($"Teleported to X: {destination.X:F0} Y: {destination.Y:F0} Z: {destination.Z:F0}");
+        _writer.WriteTeleportDebug($"Teleported to X: {destination.X:F0} Y: {destination.Y:F0} Z: {destination.Z:F0}");
 
         if (_target != null)
         {

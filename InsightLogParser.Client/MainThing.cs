@@ -106,7 +106,7 @@ public class MainThing
         _configurationManager = new ConfigurationManager(ConfigurationFilename, _messageWriter);
         var configuration = await _configurationManager.LoadConfigurationAsync().ConfigureAwait(ConfigureAwaitOptions.None);
         _configurationManager.ValidateConfiguration(configuration);
-        _messageWriter.ShouldShowDebug = () => configuration.DebugMode;
+        _messageWriter.SetConfiguration(configuration);
         return configuration;
     }
 

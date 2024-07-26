@@ -30,6 +30,7 @@ public class Configuration
     //Misc
     public bool ShowGameLogLines { get; set; } = false;
     public bool DebugMode { get; set; } = false;
+    public bool DebugTeleports { get; set; } = false;
 
     //Beeps
     public bool BeepOnNewParse { get; set; } = true;

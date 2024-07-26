@@ -35,7 +35,12 @@ internal class MessageWriter
     }
 
     private readonly object _lock = new();
-    internal Func<bool> ShouldShowDebug { get; set; } = () => false;
+    private Configuration _configuration = new ();
+
+    internal void SetConfiguration(Configuration configuration)
+    {
+        _configuration = configuration;
+    }
 
     public void WriteInitLine(string message, ConsoleColor color)
     {
@@ -84,7 +89,7 @@ internal class MessageWriter
 
     public void WriteDebug(string debugMessage)
     {
-        if (!ShouldShowDebug()) return;
+        if (!_configuration.DebugMode) return;
         lock (_lock)
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -92,6 +97,12 @@ internal class MessageWriter
             Console.ResetColor();
             Console.WriteLine($": {debugMessage}");
         }
+    }
+
+    public void WriteTeleportDebug(string debugMessage)
+    {
+        if (!_configuration.DebugTeleports) return;
+        WriteDebug(debugMessage);
     }
 
     public void WriteError(string errorMessage)
