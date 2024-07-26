@@ -40,7 +40,7 @@ internal class Beeper
     public void BeepForMissingScreenshot()
     {
         if (!_configuration.BeepForMissingScreenshot) return;
-        DoTheBeep(_configuration.MissingScreenshotBeepFrequency, _configuration.MissingScreenshotBeepFrequency);
+        DoTheBeep(_configuration.MissingScreenshotBeepFrequency, _configuration.MissingScreenshotBeepDuration);
     }
 
     public async Task BeepForAttentionAsync()
