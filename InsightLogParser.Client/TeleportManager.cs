@@ -8,6 +8,7 @@ internal class TeleportManager
     private DateTimeOffset _lastTeleportTime = DateTimeOffset.UtcNow;
     private Coordinate? _lastTeleport = null;
     private Coordinate? _target = null;
+    private PuzzleType _targetType = PuzzleType.Unknown;
 
     public TeleportManager(MessageWriter writer)
     {
@@ -33,11 +34,11 @@ internal class TeleportManager
 
         if (_target != null)
         {
-            WriteDistance(_lastTeleport.Value, _target.Value, _writer);
+            WriteDistance(_lastTeleport.Value, _target.Value, _writer, WorldInformation.GetPuzzleName(_targetType));
         }
     }
 
-    public static void WriteDistance(Coordinate current, Coordinate target, MessageWriter writer)
+    public static void WriteDistance(Coordinate current, Coordinate target, MessageWriter writer, string? puzzleType)
     {
         var delta = target - current;
         var distance = target.GetDistance3d(current);
@@ -46,7 +47,7 @@ internal class TeleportManager
         var yString = delta.Y < 0 ? $"{-delta.Y/100:####}m north" : $"{delta.Y/100:####}m south";
         var zString = delta.Z < 0 ? $"{-delta.Z/100:####}m down" : $"{delta.Z/100:####}m up";
 
-        writer.WriteInfo($"Target: {distance/100:####}m ({xString}, {yString}, {zString})");
+        writer.WriteInfo($"Target{puzzleType?.Prepend(' ')}: {distance/100:####}m ({xString}, {yString}, {zString})");
     }
 
     public Coordinate? GetLastTeleport()
@@ -54,8 +55,9 @@ internal class TeleportManager
         return _lastTeleport;
     }
 
-    public void SetTarget(Coordinate target)
+    public void SetTarget(Coordinate target, PuzzleType type)
     {
         _target = target;
+        _targetType = type;
     }
 }

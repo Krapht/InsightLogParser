@@ -448,7 +448,7 @@ namespace InsightLogParser.Client
                 return;
             }
 
-            _teleportManager.SetTarget(targetCoord.Value);
+            _teleportManager.SetTarget(targetCoord.Value, targetPuzzle.Type);
             _messageWriter.WriteInfo($"Targeting {puzzleName} with id {puzzleId}");
         }
 
@@ -479,7 +479,7 @@ namespace InsightLogParser.Client
             var boxes = new[] { targetMatchbox.Puzzle.PrimaryCoordinate.Value, targetMatchbox.Puzzle.SecondaryCoordinate.Value };
             var furthest = boxes.OrderByDescending(x => x.GetDistance2d(lastTeleport.Value)).FirstOrDefault();
             _messageWriter.WriteInfo($"Targeting Matchbox {targetMatchbox.Puzzle.KrakenId}");
-            _teleportManager.SetTarget(furthest);
+            _teleportManager.SetTarget(furthest, PuzzleType.MatchBox);
         }
 
         public async Task ImportSaveGameAsync()
@@ -588,7 +588,7 @@ namespace InsightLogParser.Client
             if (current.Value.Node.Puzzle.KrakenId != puzzleId)
             {
                 // Retarget the current node if it's not the one we just solved.
-                _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value);
+                _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle.Type);
             }
 
             NextRouteWaypoint();
@@ -671,9 +671,9 @@ namespace InsightLogParser.Client
 
             if (next == null) return;
 
-            _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value);
+            _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value, next.Value.Node.Puzzle.Type);
             WriteWaypointMessage(next.Value.Node, next.Value.Index, next.Value.Max);
-            TeleportManager.WriteDistance(currentCoordinate, next.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
+            TeleportManager.WriteDistance(currentCoordinate, next.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter, null);
         }
 
         public void CurrentRouteWaypoint()
@@ -699,9 +699,9 @@ namespace InsightLogParser.Client
             var currentCoordinate = _teleportManager.GetLastTeleport() ?? default;
 
             if (previous == null) return;
-            _teleportManager.SetTarget(previous.Value.Node.Puzzle.PrimaryCoordinate!.Value);
+            _teleportManager.SetTarget(previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, previous.Value.Node.Puzzle.Type);
             WriteWaypointMessage(previous.Value.Node, previous.Value.Index, previous.Value.Max);
-            TeleportManager.WriteDistance(currentCoordinate, previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter);
+            TeleportManager.WriteDistance(currentCoordinate, previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter, null);
         }
 
         public bool HasRoute()
