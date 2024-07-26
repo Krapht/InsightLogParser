@@ -58,7 +58,7 @@ public class MainThing
         var teleportManager = new TeleportManager(_messageWriter);
 
         _messageWriter.WriteInitLine("Poking spider", ConsoleColor.Green);
-        var puzzleIterator = new PuzzleRouter(_messageWriter);
+        var puzzleIterator = new PuzzleRouter(_messageWriter, configuration);
         var serverTracker = new ServerTracker(_messageWriter);
         var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler, computer, teleportManager, puzzleIterator, serverTracker);
 

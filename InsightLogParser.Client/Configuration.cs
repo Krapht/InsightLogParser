@@ -3,7 +3,7 @@ namespace InsightLogParser.Client;
 
 public class Configuration
 {
-    public static readonly int CurrentConfigurationVersion = 3;
+    public static readonly int CurrentConfigurationVersion = 4;
 
     public int ConfigVersion { get; set; } = CurrentConfigurationVersion;
 
@@ -41,4 +41,5 @@ public class Configuration
     public bool BeepForMissingScreenshot { get; set; }
     public int MissingScreenshotBeepFrequency { get; set; } = 440;
     public int MissingScreenshotBeepDuration { get; set; } = 150;
+    public bool IncludeStalePuzzlesInRoutes { get; set; } = true;
 }
