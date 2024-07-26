@@ -49,4 +49,5 @@ public class Configuration
     public bool BeepForMissingScreenshot { get; set; }
     public int MissingScreenshotBeepFrequency { get; set; } = 440;
     public int MissingScreenshotBeepDuration { get; set; } = 150;
+    public bool BeepForAttentionOnStaleSolve { get; set; } = false;
 }

@@ -183,11 +183,17 @@ internal class MessageWriter
         }
     }
 
-    public void WriteParsed(string puzzleZone, string puzzleName, int puzzleId, int? parsedCount, int? cycleCount, int? totalParsed, int total, TimeSpan timeLeftInCycle, TimeSpan? lastSolved)
+    public void WriteParsed(string puzzleZone, string puzzleName, int puzzleId, int? parsedCount, int? cycleCount, int? totalParsed, int total, TimeSpan timeLeftInCycle, TimeSpan? lastSolved, bool isStale)
     {
         lock (_lock)
         {
             Console.Write("Parsed ");
+            if (isStale)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(" STALE");
+                Console.ResetColor();
+            }
             WritePuzzleName(puzzleName);
             Console.Write($" ({puzzleId}) in ");
             WriteZoneName(puzzleZone);
