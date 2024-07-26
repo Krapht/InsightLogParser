@@ -38,6 +38,11 @@ namespace InsightLogParser.Client.Cetus
             return Task.FromResult<ZoneUnsolvedResponse?>(null);
         }
 
+        public Task<PuzzleScreenshotsDetails[]?> GetPuzzleScreenshots(int puzzleId)
+        {
+            return Task.FromResult<PuzzleScreenshotsDetails[]?>(null);
+        }
+
         public Task<SeenResponse?> PostSeenAsync(PlayerReport request)
         {
             return Task.FromResult<SeenResponse?>(null);

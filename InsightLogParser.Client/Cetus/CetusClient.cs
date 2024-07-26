@@ -199,6 +199,14 @@ internal class CetusClient : ICetusClient
         }
     }
 
+    public async Task<PuzzleScreenshotsDetails[]?> GetPuzzleScreenshots(int puzzleId)
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug($"CETUS: Requesting screenshots for puzzle {puzzleId}");
+        return await MakeGetAsync<PuzzleScreenshotsDetails[]>($"api/v1/puzzle/{puzzleId}/screenshots/")
+            .ConfigureAwait(ConfigureAwaitOptions.None);
+    }
+
     public async Task<ImportSaveResponse?> ImportSaveGameAsync(Stream saveGameStream)
     {
         //There is no retry with this one, so get a fresh token
