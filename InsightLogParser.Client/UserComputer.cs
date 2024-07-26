@@ -140,19 +140,40 @@ internal class UserComputer
         }
 
         var steamGameFolders = FindSteamGameLibraryLocations();
-        if (steamGameFolders == null)
+        if (steamGameFolders != null)
         {
-            _messageWriter.WriteError("Failed to find any steam library locations");
-            return null;
+            foreach (var steamGameFolder in steamGameFolders)
+            {
+                var subPath = Path.Combine("steamapps", "common", "Islands of Insight", "IslandsofInsight", "Content", "ASophia", "PuzzleDatabase", "Puzzles.json");
+                var jsonPath = Path.Combine(steamGameFolder, subPath);
+                _messageWriter.WriteDebug($"Checking: '{jsonPath}'");
+                if (!File.Exists(jsonPath)) continue;
+                return jsonPath;
+            }
         }
 
-        foreach (var steamGameFolder in steamGameFolders)
+        //Fallback to scanning the log file for the game path
+        var logFilePath = GetPrimaryLogFile();
+        if (File.Exists(logFilePath))
         {
-            var subPath = Path.Combine("steamapps", "common", "Islands of Insight", "IslandsofInsight", "Content", "ASophia", "PuzzleDatabase", "Puzzles.json");
-            var jsonPath = Path.Combine(steamGameFolder, subPath);
-            _messageWriter.WriteDebug($"Checking: '{jsonPath}'");
-            if (!File.Exists(jsonPath)) continue;
-            return jsonPath;
+            _messageWriter.WriteDebug("Attempting to get base folder from log file");
+            var regex = new Regex(@"^LogInit: Base Directory: (.*)\/IslandsofInsight\/Binaries\/Win64\/$", RegexOptions.Compiled);
+            using (var fs = File.Open(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var sr = new StreamReader(fs, Encoding.UTF8))
+            {
+                while (!sr.EndOfStream)
+                {
+                    var line = sr.ReadLine();
+                    if (line == null) break;
+                    var match = regex.Match(line);
+                    if (!match.Success) continue;
+                    var basePath = match.Groups[1].Value;
+                    var jsonPath = Path.Combine(basePath, puzzleJsonPath);
+                    _messageWriter.WriteDebug($"Checking: '{jsonPath}'");
+                    if (File.Exists(jsonPath)) return jsonPath;
+                    break;
+                }
+            }
         }
 
         return null;
