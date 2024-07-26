@@ -130,7 +130,7 @@ internal class PuzzleRouter
     public void SetRoute(IEnumerable<RouteNode> puzzles, Coordinate startCoordinate)
     {
         var valid = puzzles
-            .Where(x => x.Puzzle.PrimaryCoordinate != null && (_configuration.IncludeStalePuzzlesInRoutes || !(x.Stale.HasValue && x.Stale.Value)))
+            .Where(x => x.Puzzle.PrimaryCoordinate != null && !(_configuration.ExcludeStalePuzzlesInRoutes && x.Stale == true))
             .ToList();
 
         if (valid.Count == 0)
