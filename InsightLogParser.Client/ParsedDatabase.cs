@@ -233,13 +233,23 @@ namespace InsightLogParser.Client
             }
         }
 
+        public IEnumerable<int> GetSolvedIds(PuzzleZone zone)
+        {
+            if (!_started) throw new InvalidOperationException("Not started yet");
+            lock (_lock)
+            {
+                if (!_db.Zones.TryGetValue(zone, out var puzzleZone)) return [];
+                return puzzleZone.SolvedEntries.SelectMany(x => x.Value.Keys);
+            }
+        }
+
         public IEnumerable<int> GetSolvedIds(PuzzleZone zone, PuzzleType type)
         {
             if (!_started) throw new InvalidOperationException("Not started yet");
             lock (_lock)
             {
-                if (!_db.Zones.TryGetValue(zone, out var puzzleZone)) return Enumerable.Empty<int>();
-                if (!puzzleZone.SolvedEntries.TryGetValue(type, out var puzzleType)) return Enumerable.Empty<int>();
+                if (!_db.Zones.TryGetValue(zone, out var puzzleZone)) return [];
+                if (!puzzleZone.SolvedEntries.TryGetValue(type, out var puzzleType)) return [];
                 return puzzleType.Keys;
             }
         }

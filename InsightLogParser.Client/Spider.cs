@@ -594,6 +594,28 @@ namespace InsightLogParser.Client
             NextRouteWaypoint();
         }
 
+        public void GenerateUnsolvedWaypoints(PuzzleZone puzzleZone)
+        {
+            var pool = _gamePuzzleHandler.PuzzleDatabase.Values
+                .Where(x => x.IsWorldPuzzle && x.Zone == puzzleZone)
+            .ToList();
+
+            var solved = _db.GetSolvedIds(puzzleZone).ToList();
+            var unsolvedPool = pool.Where(x => !solved.Contains(x.KrakenId)).ToList();
+
+            var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
+            _puzzleRouter.SetRoute(unsolvedPool.Select(x => new RouteNode
+            {
+                Puzzle = x,
+                Servers = null,
+                Stale = null,
+
+            }), startCoordinate);
+
+            NextRouteWaypoint();
+        }
+
+
         public void GenerateUnsolvedWaypoints(PuzzleZone puzzleZone, PuzzleType puzzleType)
         {
             var pool = _gamePuzzleHandler.PuzzleDatabase.Values

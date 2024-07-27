@@ -20,6 +20,7 @@ internal class RouteMenu : IMenu
         {
             yield return (null, "Routes. Press [h] to display this menu again and backspace to back");
             yield return ('u', "Get route to unsolved local puzzles");
+            yield return ('U', "Get route to all unsolved local puzzles in area (could be very many)");
             if (_spider.IsOnline())
             {
                 yield return ('f', "Fetch sighted unsolved puzzles for a zone from Cetus");
@@ -47,6 +48,12 @@ internal class RouteMenu : IMenu
                 var puzzleType = _menuHandler.PickWorldPuzzleType();
                 if (puzzleType == PuzzleType.Unknown) return MenuResult.NotValidOption;
                 _spider.GenerateUnsolvedWaypoints(puzzleZone, puzzleType);
+                return MenuResult.PrintMenu;
+
+            case 'U':
+                var puzzleZone2 = _menuHandler.PickZone();
+                if (puzzleZone2 == PuzzleZone.Unknown) return MenuResult.NotValidOption;
+                _spider.GenerateUnsolvedWaypoints(puzzleZone2);
                 return MenuResult.PrintMenu;
 
             case 'f':
