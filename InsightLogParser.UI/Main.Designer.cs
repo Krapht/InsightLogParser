@@ -94,9 +94,8 @@
             lbl2DDistance.Location = new Point(128, 0);
             lbl2DDistance.Margin = new Padding(0);
             lbl2DDistance.Name = "lbl2DDistance";
-            lbl2DDistance.Size = new Size(95, 65);
+            lbl2DDistance.Size = new Size(1, 65);
             lbl2DDistance.TabIndex = 0;
-            lbl2DDistance.Text = "0m";
             // 
             // lblVerticalDistance
             // 
@@ -105,12 +104,11 @@
             lblVerticalDistance.Dock = DockStyle.Fill;
             lblVerticalDistance.Font = new Font("Segoe UI", 36F);
             lblVerticalDistance.ForeColor = Color.White;
-            lblVerticalDistance.Location = new Point(287, 0);
+            lblVerticalDistance.Location = new Point(192, 0);
             lblVerticalDistance.Margin = new Padding(0);
             lblVerticalDistance.Name = "lblVerticalDistance";
-            lblVerticalDistance.Size = new Size(95, 65);
+            lblVerticalDistance.Size = new Size(1, 65);
             lblVerticalDistance.TabIndex = 1;
-            lblVerticalDistance.Text = "0m";
             // 
             // picPuzzleType
             // 
@@ -137,7 +135,7 @@
             // picArrow
             // 
             picArrow.Dock = DockStyle.Fill;
-            picArrow.Location = new Point(223, 0);
+            picArrow.Location = new Point(128, 0);
             picArrow.Margin = new Padding(0);
             picArrow.Name = "picArrow";
             picArrow.Size = new Size(64, 65);
@@ -151,7 +149,7 @@
             lblPuzzleType.Dock = DockStyle.Fill;
             lblPuzzleType.Font = new Font("Segoe UI", 36F);
             lblPuzzleType.ForeColor = Color.White;
-            lblPuzzleType.Location = new Point(382, 0);
+            lblPuzzleType.Location = new Point(192, 0);
             lblPuzzleType.Margin = new Padding(0);
             lblPuzzleType.Name = "lblPuzzleType";
             lblPuzzleType.Size = new Size(1, 65);
@@ -163,25 +161,25 @@
             lblID.Dock = DockStyle.Fill;
             lblID.Font = new Font("Segoe UI", 36F);
             lblID.ForeColor = Color.White;
-            lblID.Location = new Point(382, 0);
+            lblID.Location = new Point(192, 0);
             lblID.Margin = new Padding(0);
             lblID.Name = "lblID";
-            lblID.Size = new Size(418, 65);
+            lblID.Size = new Size(608, 65);
             lblID.TabIndex = 6;
             lblID.TextAlign = ContentAlignment.TopRight;
             // 
             // tableLayoutPanel1
             // 
             tableLayoutPanel1.ColumnCount = 2;
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 67F));
             tableLayoutPanel1.Controls.Add(picMap, 0, 0);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(0, 64);
             tableLayoutPanel1.Margin = new Padding(0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 1;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tableLayoutPanel1.Size = new Size(800, 386);
             tableLayoutPanel1.TabIndex = 1;
             // 
@@ -192,8 +190,8 @@
             picMap.Location = new Point(0, 0);
             picMap.Margin = new Padding(0);
             picMap.Name = "picMap";
-            picMap.Size = new Size(400, 386);
-            picMap.SizeMode = PictureBoxSizeMode.StretchImage;
+            picMap.Size = new Size(264, 386);
+            picMap.SizeMode = PictureBoxSizeMode.Zoom;
             picMap.TabIndex = 0;
             picMap.TabStop = false;
             // 
