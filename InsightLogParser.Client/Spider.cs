@@ -146,7 +146,7 @@ namespace InsightLogParser.Client
                 var screenShotStrings = needsScreenshots
                     .Select(x => (CategoryName: ScreenshotManager.GetCategoryName(x.Category), IsRequested: x.IsMissing))
                     .ToList();
-                _messageWriter.WriteCetusParsed(sightingsCount, unsolved.Count(x => x.IsFresh), unsolved.Count(x => !x.IsFresh), screenShotStrings);
+                _messageWriter.WriteCetusParsed(sightingsCount, unsolved.Count(x => x.IsFresh), unsolved.Count(x => !x.IsFresh), screenShotStrings, cetusInfo.FirstSighting);
                 if (screenShotStrings.Any(x => x.IsRequested))
                 {
                     _beeper.BeepForMissingScreenshot();
@@ -156,7 +156,7 @@ namespace InsightLogParser.Client
             _messageWriter.WriteEndSolved();
 
             // If we solved a puzzle, we're obviously at that puzzle, so let's move to it if we have a coordinate for it.
-            var puzzle = _gamePuzzleHandler.PuzzleDatabase.Values.Where(p => p.KrakenId == puzzleId).FirstOrDefault();
+            var puzzle = _gamePuzzleHandler.PuzzleDatabase.Values.FirstOrDefault(p => p.KrakenId == puzzleId);
             if (puzzle != null && puzzle.PrimaryCoordinate.HasValue)
             {
                 _teleportManager.Teleport(puzzle.PrimaryCoordinate!.Value);
@@ -202,12 +202,12 @@ namespace InsightLogParser.Client
             if (seenResponse != null && _screenshotManager != null)
             {
                 var screenshotStatus = _screenshotManager.GetScreenshotStatus(type, false, seenResponse.Screenshots);
-                var statusStrings = screenshotStatus
+                var screenshotStrings = screenshotStatus
                     .Select(x => (CategoryName: ScreenshotManager.GetCategoryName(x.Category), IsRequested: x.IsMissing))
                     .ToList();
 
-                _messageWriter.WriteCetusOpened(statusStrings);
-                if (statusStrings.Any(x => x.IsRequested))
+                _messageWriter.WriteCetusOpened(screenshotStrings, seenResponse.FirstSighting);
+                if (screenshotStrings.Any(x => x.IsRequested))
                 {
                     _beeper.BeepForMissingScreenshot();
                 }

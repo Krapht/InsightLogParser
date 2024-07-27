@@ -232,13 +232,19 @@ internal class MessageWriter
         }
     }
 
-    public void WriteCetusParsed(int sightingsCount, int unsolvedFresh, int unsolvedStale, IReadOnlyList<(string CategoryName, bool IsRequested)>? screenshotCategories)
+    public void WriteCetusParsed(int sightingsCount, int unsolvedFresh, int unsolvedStale, IReadOnlyList<(string CategoryName, bool IsRequested)>? screenshotCategories, bool isFirstSighting)
     {
         lock (_lock)
         {
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.Write("[Cetus]: ");
             Console.ResetColor();
+            if (isFirstSighting)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("Fist sighting in cycle! ");
+                Console.ResetColor();;
+            }
             Console.Write($"Unsolved: {unsolvedFresh}, Stale: {unsolvedStale}, TotalSeen: {sightingsCount}");
             if (screenshotCategories != null)
             {
@@ -301,13 +307,19 @@ internal class MessageWriter
         }
     }
 
-    public void WriteCetusOpened(List<(string CategoryName, bool IsRequested)> needsScreenshot)
+    public void WriteCetusOpened(List<(string CategoryName, bool IsRequested)> needsScreenshot, bool isFirstSighting)
     {
         lock (_lock)
         {
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.Write("[Cetus]: ");
             Console.ResetColor();
+            if (isFirstSighting)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write("First sighting in cycle! ");
+                Console.ResetColor();;
+            }
             Console.Write("Has Screenshots: ");
             foreach (var sc in needsScreenshot)
             {

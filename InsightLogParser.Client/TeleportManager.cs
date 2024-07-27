@@ -46,8 +46,8 @@ internal class TeleportManager
         var xString = delta.X < 0 ? $"{-delta.X/100:####}m west" : $"{delta.X/100:####}m east";
         var yString = delta.Y < 0 ? $"{-delta.Y/100:####}m north" : $"{delta.Y/100:####}m south";
         var zString = delta.Z < 0 ? $"{-delta.Z/100:####}m down" : $"{delta.Z/100:####}m up";
-
-        writer.WriteInfo($"Target{puzzleType?.Prepend(' ')}: {distance/100:####}m ({xString}, {yString}, {zString})");
+        var targetTypeString = puzzleType != null ? $" {puzzleType}" : null;
+        writer.WriteInfo($"Target{targetTypeString}: {distance/100:####}m ({xString}, {yString}, {zString})");
     }
 
     public Coordinate? GetLastTeleport()

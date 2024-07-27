@@ -6,6 +6,9 @@ namespace InsightLogParser.Common.ApiModels
 {
     public class SeenResponse
     {
+        [JsonPropertyName("firstSighting")]
+        public required bool FirstSighting { get; set; }
+
         [JsonPropertyName("screenshots")]
         public ScreenshotCategory[] Screenshots { get; set; }
     }
