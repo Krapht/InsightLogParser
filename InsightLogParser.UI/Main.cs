@@ -50,6 +50,9 @@ namespace InsightLogParser.UI {
                     SetTarget(location, (PuzzleType)puzzleType, puzzleId, routeNumber, routeLength);
                     break;
                 }
+                case "shutdown":
+                    Application.Exit();
+                    break;
             }
         }
 

@@ -22,6 +22,8 @@ try
     var mainThing = new MainThing(forcedExitSource.Token);
     await mainThing.RunAsync();
 
+    await Server.StopWebSocketServer();
+
     forcedExitSource.Cancel();
 
     await webSocketServer;

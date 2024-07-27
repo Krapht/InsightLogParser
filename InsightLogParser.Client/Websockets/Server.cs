@@ -39,6 +39,14 @@ namespace InsightLogParser.Client.Websockets {
             }
         }
 
+        internal static async Task StopWebSocketServer() {
+            await Server.SendAsync(new { type = "shutdown" });
+
+            foreach (var client in _clients) {
+                await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Server shutting down", CancellationToken.None);
+            }
+        }
+
         private static async Task HandleWebSocketConnection(WebSocket webSocket, CancellationToken cancellationToken) {
             // Add the connection.
             _clients.Add(webSocket);
