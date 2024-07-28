@@ -85,7 +85,12 @@ internal class TeleportManager
 
         // If we solved a puzzle, we're obviously at that puzzle, so let's move to it if we have a coordinate for it.
         // Light motifs and sightseers already "teleport" you so no need to do it twice
-        if (puzzle.PrimaryCoordinate.HasValue && puzzle.Type != PuzzleType.LightMotif && puzzle.Type != PuzzleType.SightSeer)
+        if (puzzle.PrimaryCoordinate.HasValue
+            && puzzle.Type != PuzzleType.LightMotif //Already triggers a teleport log entry
+            && puzzle.Type != PuzzleType.SightSeer //Already triggers a teleport log entry
+            && puzzle.Type != PuzzleType.WanderingEcho //Might end up quite far away from its coordinate
+            && puzzle.Type != PuzzleType.GlideRings //Might end up quite far away from its coordinate
+            )
         {
             Teleport(puzzle.PrimaryCoordinate!.Value);
         }

@@ -482,7 +482,9 @@ namespace InsightLogParser.Client
 
         public void ClearTarget()
         {
-            _teleportManager.ClearTarget();;
+            _teleportManager.ClearTarget();
+            _messageWriter.WriteInfo("Target cleared");
+            ResumeRoute();
         }
 
         public async Task ImportSaveGameAsync()
@@ -588,10 +590,12 @@ namespace InsightLogParser.Client
             _puzzleRouter.AddSolved(puzzleId);
             var current = _puzzleRouter.CurrentNode();
             if (current == null) return;
-            if (current.Value.Node.Puzzle.KrakenId != puzzleId && !_teleportManager.HasTarget())
+            if (current.Value.Node.Puzzle.KrakenId != puzzleId)
             {
-                // Retarget the current node if it's not the one we just solved, and we don't currently have a target.
-                _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle);
+                if (!_teleportManager.HasTarget())
+                {
+                    ResumeRoute();
+                }
                 return;
             }
 
@@ -739,6 +743,22 @@ namespace InsightLogParser.Client
         {
             _puzzleRouter.ClearRoute();
             ClearTarget();
+        }
+
+        public void ResumeRoute()
+        {
+            if (!HasRoute()) return;
+
+            if (!_teleportManager.HasTarget())
+            {
+                var current = _puzzleRouter.CurrentNode();
+                if (current == null) return;
+
+                // Retarget the current node if it's not the one we just solved, and we don't currently have a target.
+                _messageWriter.WriteInfo("Resuming Route");
+                _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle);
+                WriteWaypointMessage(current.Value.Node, current.Value.Index, current.Value.Max);
+            }
         }
         #endregion
     }
