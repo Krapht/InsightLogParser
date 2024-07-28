@@ -155,14 +155,14 @@ namespace InsightLogParser.Client
 
             _messageWriter.WriteEndSolved();
 
+            RouteHandleSolved(puzzleId);
+
             // If we solved a puzzle, we're obviously at that puzzle, so let's move to it if we have a coordinate for it.
             var puzzle = _gamePuzzleHandler.PuzzleDatabase.Values.FirstOrDefault(p => p.KrakenId == puzzleId);
             if (puzzle != null && puzzle.PrimaryCoordinate.HasValue)
             {
                 _teleportManager.Teleport(puzzle.PrimaryCoordinate!.Value);
             }
-
-            RouteHandleSolved(puzzleId);
 
             _screenshotManager?.SetLastPuzzle(puzzleId, true);
         }
@@ -589,6 +589,7 @@ namespace InsightLogParser.Client
             {
                 // Retarget the current node if it's not the one we just solved.
                 _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle.Type);
+                return;
             }
 
             NextRouteWaypoint();
