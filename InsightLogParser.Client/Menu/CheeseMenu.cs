@@ -23,9 +23,9 @@ internal class CheeseMenu : IMenu
                 yield return ('s', "Open solution to last opened puzzle, if available");
                 yield return ('m', "Find mate to matchbox closest to last teleport");
                 yield return ('t', "Target puzzle by id");
+                yield return ('c', "Clear target");
                 yield return ('f', "List 15 closest (in 2d) puzzles to last teleport");
                 yield return ('F', "List 15 closest (in 3d) puzzles to last teleport");
-
             }
         }
     }
@@ -37,9 +37,11 @@ internal class CheeseMenu : IMenu
             case 's':
                 _spider.OpenSolutionScreenshot();
                 return MenuResult.Ok;
+
             case 'm':
                 _spider.TargetOtherMatchbox();
                 return MenuResult.Ok;
+
             case 't':
                 Console.Write("Puzzle Id: ");
                 var consoleString = Console.ReadLine();
@@ -51,6 +53,10 @@ internal class CheeseMenu : IMenu
                 _spider.TargetPuzzle(puzzleId);
                 return MenuResult.Ok;
 
+            case 'c':
+                _spider.ClearTarget();
+                return MenuResult.Ok;
+
             case 'f':
                 await _spider.ListClosestAsync(15, true);
                 return MenuResult.Ok;
@@ -58,6 +64,7 @@ internal class CheeseMenu : IMenu
             case 'F':
                 await _spider.ListClosestAsync(15, false);
                 return MenuResult.Ok;
+
             default:
                 return MenuResult.NotValidOption;
         }

@@ -1,4 +1,5 @@
-﻿using InsightLogParser.Common.World;
+﻿using InsightLogParser.Common.PuzzleParser;
+using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Client;
 
@@ -8,7 +9,7 @@ internal class TeleportManager
     private DateTimeOffset _lastTeleportTime = DateTimeOffset.UtcNow;
     private Coordinate? _lastTeleport = null;
     private Coordinate? _target = null;
-    private PuzzleType _targetType = PuzzleType.Unknown;
+    private InsightPuzzle? _targetPuzzle = null;
 
     public TeleportManager(MessageWriter writer)
     {
@@ -34,7 +35,8 @@ internal class TeleportManager
 
         if (_target != null)
         {
-            WriteDistance(_lastTeleport.Value, _target.Value, _writer, WorldInformation.GetPuzzleName(_targetType));
+            var targetType = _targetPuzzle?.Type ?? PuzzleType.Unknown;
+            WriteDistance(_lastTeleport.Value, _target.Value, _writer, WorldInformation.GetPuzzleName(targetType));
         }
     }
 
@@ -55,9 +57,37 @@ internal class TeleportManager
         return _lastTeleport;
     }
 
-    public void SetTarget(Coordinate target, PuzzleType type)
+    public bool HasTarget()
+    {
+        return _target != null;
+    }
+
+    public void SetTarget(Coordinate target, InsightPuzzle puzzle)
     {
         _target = target;
-        _targetType = type;
+        _targetPuzzle = puzzle;
+    }
+
+    public void ClearTarget()
+    {
+        _target = null;
+        _targetPuzzle = null;
+    }
+
+    public void HandleSolved(InsightPuzzle puzzle)
+    {
+        //If we found our target, clear it
+        if (_targetPuzzle?.KrakenId == puzzle.KrakenId)
+        {
+            ClearTarget();
+            return;
+        }
+
+        // If we solved a puzzle, we're obviously at that puzzle, so let's move to it if we have a coordinate for it.
+        // Light motifs and sightseers already "teleport" you so no need to do it twice
+        if (puzzle.PrimaryCoordinate.HasValue && puzzle.Type != PuzzleType.LightMotif && puzzle.Type != PuzzleType.SightSeer)
+        {
+            Teleport(puzzle.PrimaryCoordinate!.Value);
+        }
     }
 }

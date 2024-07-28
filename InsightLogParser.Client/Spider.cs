@@ -155,14 +155,12 @@ namespace InsightLogParser.Client
 
             _messageWriter.WriteEndSolved();
 
-            RouteHandleSolved(puzzleId);
-
-            // If we solved a puzzle, we're obviously at that puzzle, so let's move to it if we have a coordinate for it.
             var puzzle = _gamePuzzleHandler.PuzzleDatabase.Values.FirstOrDefault(p => p.KrakenId == puzzleId);
-            if (puzzle != null && puzzle.PrimaryCoordinate.HasValue)
+            if (puzzle != null)
             {
-                _teleportManager.Teleport(puzzle.PrimaryCoordinate!.Value);
+                _teleportManager.HandleSolved(puzzle);
             }
+            RouteHandleSolved(puzzleId);
 
             _screenshotManager?.SetLastPuzzle(puzzleId, true);
         }
@@ -448,7 +446,7 @@ namespace InsightLogParser.Client
                 return;
             }
 
-            _teleportManager.SetTarget(targetCoord.Value, targetPuzzle.Type);
+            _teleportManager.SetTarget(targetCoord.Value, targetPuzzle);
             _messageWriter.WriteInfo($"Targeting {puzzleName} with id {puzzleId}");
         }
 
@@ -479,7 +477,12 @@ namespace InsightLogParser.Client
             var boxes = new[] { targetMatchbox.Puzzle.PrimaryCoordinate.Value, targetMatchbox.Puzzle.SecondaryCoordinate.Value };
             var furthest = boxes.OrderByDescending(x => x.GetDistance2d(lastTeleport.Value)).FirstOrDefault();
             _messageWriter.WriteInfo($"Targeting Matchbox {targetMatchbox.Puzzle.KrakenId}");
-            _teleportManager.SetTarget(furthest, PuzzleType.MatchBox);
+            _teleportManager.SetTarget(furthest, targetMatchbox.Puzzle);
+        }
+
+        public void ClearTarget()
+        {
+            _teleportManager.ClearTarget();;
         }
 
         public async Task ImportSaveGameAsync()
@@ -585,10 +588,10 @@ namespace InsightLogParser.Client
             _puzzleRouter.AddSolved(puzzleId);
             var current = _puzzleRouter.CurrentNode();
             if (current == null) return;
-            if (current.Value.Node.Puzzle.KrakenId != puzzleId)
+            if (current.Value.Node.Puzzle.KrakenId != puzzleId && !_teleportManager.HasTarget())
             {
-                // Retarget the current node if it's not the one we just solved.
-                _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle.Type);
+                // Retarget the current node if it's not the one we just solved, and we don't currently have a target.
+                _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle);
                 return;
             }
 
@@ -694,7 +697,7 @@ namespace InsightLogParser.Client
 
             if (next == null) return;
 
-            _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value, next.Value.Node.Puzzle.Type);
+            _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value, next.Value.Node.Puzzle);
             WriteWaypointMessage(next.Value.Node, next.Value.Index, next.Value.Max);
             TeleportManager.WriteDistance(currentCoordinate, next.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter, null);
         }
@@ -722,7 +725,7 @@ namespace InsightLogParser.Client
             var currentCoordinate = _teleportManager.GetLastTeleport() ?? default;
 
             if (previous == null) return;
-            _teleportManager.SetTarget(previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, previous.Value.Node.Puzzle.Type);
+            _teleportManager.SetTarget(previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, previous.Value.Node.Puzzle);
             WriteWaypointMessage(previous.Value.Node, previous.Value.Index, previous.Value.Max);
             TeleportManager.WriteDistance(currentCoordinate, previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter, null);
         }
@@ -734,7 +737,8 @@ namespace InsightLogParser.Client
 
         public void ClearRoute()
         {
-            _puzzleRouter.ClearRoute();;
+            _puzzleRouter.ClearRoute();
+            ClearTarget();
         }
         #endregion
     }

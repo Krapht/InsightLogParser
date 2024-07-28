@@ -202,7 +202,7 @@ internal class MessageWriter
             if (isStale)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(" STALE");
+                Console.Write(" STALE");
                 Console.ResetColor();
             }
             WritePuzzleName(puzzleName);
