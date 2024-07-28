@@ -107,10 +107,6 @@ namespace InsightLogParser.Client
             var solvedAgo = lastSolved.HasValue ? _timeTools.GetTimeSince(lastSolved.Value) : (TimeSpan?)null;
 
             _messageWriter.WriteParsed(zoneName, puzzleName, puzzleId, parsedCount, cycleCount, totalCount, worldPuzzle.TotalPuzzles, timeToCycle, solvedAgo, !isFresh);
-            if (!isFresh && _configuration.BeepForAttentionOnStaleSolve)
-            {
-                await _beeper.BeepForAttentionAsync();
-            }
 
             //Online
             var cetusTask = _cetusClient.PostSolvedAsync(new PlayerReport()
@@ -123,7 +119,11 @@ namespace InsightLogParser.Client
                 ServerAddress = _serverAddress,
             });
 
-            if (lastSolved.HasValue)
+            if (!isFresh && _configuration.BeepForAttentionOnStaleSolve)
+            {
+                await _beeper.BeepForAttentionAsync();
+            }
+            else if (lastSolved.HasValue)
             {
                 _beeper.BeepForKnownParse();
             }
