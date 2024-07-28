@@ -34,6 +34,7 @@
             lblID = new Label();
             tableLayoutPanel1 = new TableLayoutPanel();
             picMap = new PictureBox();
+            picScreenshot = new PictureBox();
             pnlMain.SuspendLayout();
             pnlTarget.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picPuzzleType).BeginInit();
@@ -41,6 +42,7 @@
             ((System.ComponentModel.ISupportInitialize)picArrow).BeginInit();
             tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picMap).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)picScreenshot).BeginInit();
             SuspendLayout();
             // 
             // pnlMain
@@ -173,6 +175,7 @@
             tableLayoutPanel1.ColumnCount = 2;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 67F));
+            tableLayoutPanel1.Controls.Add(picScreenshot, 0, 0);
             tableLayoutPanel1.Controls.Add(picMap, 0, 0);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(0, 64);
@@ -195,6 +198,17 @@
             picMap.TabIndex = 0;
             picMap.TabStop = false;
             // 
+            // picScreenshot
+            // 
+            picScreenshot.Dock = DockStyle.Fill;
+            picScreenshot.Location = new Point(264, 0);
+            picScreenshot.Margin = new Padding(0);
+            picScreenshot.Name = "picScreenshot";
+            picScreenshot.Size = new Size(536, 386);
+            picScreenshot.SizeMode = PictureBoxSizeMode.Zoom;
+            picScreenshot.TabIndex = 1;
+            picScreenshot.TabStop = false;
+            // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -212,6 +226,7 @@
             ((System.ComponentModel.ISupportInitialize)picArrow).EndInit();
             tableLayoutPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)picMap).EndInit();
+            ((System.ComponentModel.ISupportInitialize)picScreenshot).EndInit();
             ResumeLayout(false);
         }
 
@@ -228,5 +243,6 @@
         private Label lblID;
         private TableLayoutPanel tableLayoutPanel1;
         private PictureBox picMap;
+        private PictureBox picScreenshot;
     }
 }

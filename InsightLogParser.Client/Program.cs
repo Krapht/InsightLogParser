@@ -17,9 +17,9 @@ try
 
     Console.CancelKeyPress += ConsoleOnCancelKeyPress;
 
-    var webSocketServer = Server.StartWebSocketServer(forcedExitSource.Token);
-
     var mainThing = new MainThing(forcedExitSource.Token);
+    var webSocketServer = Server.StartWebSocketServer(forcedExitSource.Token, mainThing);
+
     await mainThing.RunAsync();
 
     await Server.StopWebSocketServer();

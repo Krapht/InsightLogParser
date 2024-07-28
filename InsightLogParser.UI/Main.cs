@@ -8,6 +8,8 @@ namespace InsightLogParser.UI {
     public partial class Main : Form {
         private readonly Client _webSocketClient = new();
 
+        private readonly string cacheDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "InsightLogParser", "cache");
+
         private Coordinate _location;
         private Coordinate _target;
         private PuzzleType _puzzleType;
@@ -21,7 +23,7 @@ namespace InsightLogParser.UI {
             _ = _webSocketClient.ConnectAsync();
         }
 
-        private void WebSocketClient_OnMessageReceived(object sender, MessageReceivedEventArgs e) {
+        private async void WebSocketClient_OnMessageReceived(object sender, MessageReceivedEventArgs e) {
             var message = e.Message;
             var data = JsonDocument.Parse(message);
 
@@ -47,12 +49,18 @@ namespace InsightLogParser.UI {
                     var routeNumber = data.RootElement.GetProperty("routeNumber").GetInt32();
                     var routeLength = data.RootElement.GetProperty("routeLength").GetInt32();
                     var location = new Coordinate(x, y, z);
-                    SetTarget(location, (PuzzleType)puzzleType, puzzleId, routeNumber, routeLength);
+                    await SetTarget(location, (PuzzleType)puzzleType, puzzleId, routeNumber, routeLength);
                     break;
                 }
                 case "shutdown":
                     Application.Exit();
                     break;
+                case "screenshot": {
+                    var puzzleId = data.RootElement.GetProperty("puzzleId").GetInt32();
+                    var url = data.RootElement.GetProperty("url").GetString();
+                    await DownloadScreenshot(puzzleId, url);
+                    break;
+                }
             }
         }
 
@@ -61,13 +69,58 @@ namespace InsightLogParser.UI {
             UpdateTarget();
         }
 
-        public void SetTarget(Coordinate target, PuzzleType type, int id, int routeNumber, int routeLength) {
+        public async Task SetTarget(Coordinate target, PuzzleType type, int id, int routeNumber, int routeLength) {
             _target = target;
             _puzzleType = type;
-            _puzzleId = id;
             _routeNumber = routeNumber;
             _routeLength = routeLength;
+            var oldPuzzleId = _puzzleId;
+            _puzzleId = id;
             UpdateTarget();
+
+            if (id != 0) {
+                if (id == oldPuzzleId) {
+                    return;
+                }
+
+                // Clear the current image
+                if (picScreenshot.InvokeRequired) {
+                    picScreenshot.Invoke(new Action(() => {
+                        picScreenshot.Image?.Dispose();
+                        picScreenshot.Image = null;
+                        picScreenshot.Update();
+                    }));
+                } else {
+                    picScreenshot.Image?.Dispose();
+                    picScreenshot.Image = null;
+                    picScreenshot.Update();
+                }
+
+                // Check if the screenshot has already been cached.
+                var cachePath = Path.Combine(cacheDirectory, $"{id}.png");
+                if (File.Exists(cachePath)) {
+                    if (picScreenshot.InvokeRequired) {
+                        picScreenshot.Invoke(new Action(() => {
+                            picScreenshot.Image = Image.FromFile(cachePath);
+                            picScreenshot.Update();
+                        }));
+                    } else {
+                        picScreenshot.Image = Image.FromFile(cachePath);
+                        picScreenshot.Update();
+                    }
+                    return;
+                }
+
+                // Otherwise, request the screenshot from the server.
+                try {
+                    await _webSocketClient.SendAsync(new {
+                        type = "screenshot",
+                        puzzleId = id
+                    });
+                } catch (Exception ex) {
+                    MessageBox.Show(ex.Message);
+                }
+            }
         }
 
         private void UpdateTarget() {
@@ -157,6 +210,8 @@ namespace InsightLogParser.UI {
 
                 lblID.Text = _puzzleId.ToString();
 
+                Application.DoEvents();
+
                 var locationX = (_location.X + 102844) / 32.88 + 1450;
                 var locationY = (_location.Y + 104171) / 32.96 + 572;
                 var targetX = (_target.X + 102844) / 32.88 + 1450;
@@ -177,12 +232,25 @@ namespace InsightLogParser.UI {
                 var zoomSize = maxDistance + 2 * buffer;
 
                 // Ensure the zoom dimensions are at least as large as the picture box dimensions
-                zoomSize = Math.Max(zoomSize, Math.Max(picMap.Width, picMap.Height));
+                var aspectRatio = (float)picMap.Width / picMap.Height;
+                if (aspectRatio > 1) {
+                    zoomSize = Math.Max(zoomSize, picMap.Width);
+                } else {
+                    zoomSize = Math.Max(zoomSize, picMap.Height);
+                }
 
                 // Ensure we don't zoom in too much
                 zoomSize = Math.Min(zoomSize, Math.Min(fullMap.Width, fullMap.Height));
 
-                var zoomRect = new Rectangle((int)(centerX - zoomSize / 2), (int)(centerY - zoomSize / 2), (int)Math.Round(zoomSize), (int)Math.Round(zoomSize));
+                // Adjust zoomRect to maintain aspect ratio
+                var zoomWidth = zoomSize;
+                var zoomHeight = zoomSize / aspectRatio;
+                if (zoomHeight > fullMap.Height) {
+                    zoomHeight = fullMap.Height;
+                    zoomWidth = zoomHeight * aspectRatio;
+                }
+
+                var zoomRect = new Rectangle((int)(centerX - zoomWidth / 2), (int)(centerY - zoomHeight / 2), (int)Math.Round(zoomWidth), (int)Math.Round(zoomHeight));
 
                 // Create a bitmap for the zoomed map
                 using (var zoomedMap = new Bitmap(picMap.Width, picMap.Height))
@@ -222,6 +290,30 @@ namespace InsightLogParser.UI {
             }
 
             GC.Collect();
+        }
+
+        private async Task DownloadScreenshot(int puzzleId, string url) {
+            var client = new HttpClient();
+            var response = await client.GetAsync(url);
+            var stream = await response.Content.ReadAsStreamAsync();
+            var image = Image.FromStream(stream);
+            
+            // Cache the image to disk.
+            Directory.CreateDirectory(cacheDirectory);
+            var cachePath = Path.Combine(cacheDirectory, $"{puzzleId}.png");
+            image.Save(cachePath);
+
+            if (InvokeRequired) {
+                Invoke(new Action(() => {
+                    picScreenshot.Image?.Dispose();
+                    picScreenshot.Image = image;
+                    picScreenshot.Update();
+                }));
+            } else {
+                picScreenshot.Image?.Dispose();
+                picScreenshot.Image = image;
+                picScreenshot.Update();
+            }
         }
     }
 }

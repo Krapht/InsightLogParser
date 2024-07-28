@@ -7,8 +7,11 @@ using System.Text.Json;
 namespace InsightLogParser.Client.Websockets {
     internal class Server {
         private static readonly ConcurrentBag<WebSocket> _clients = [];
+        private static MainThing _mainThing;
 
-        internal static async Task StartWebSocketServer(CancellationToken cancellationToken) {
+        internal static async Task StartWebSocketServer(CancellationToken cancellationToken, MainThing mainThing) {
+            _mainThing = mainThing;
+
             // Create HTTP listener.
             var httpListener = new HttpListener();
             httpListener.Prefixes.Add("http://localhost:38254/ws/");
@@ -80,7 +83,7 @@ namespace InsightLogParser.Client.Websockets {
                         var type = data.RootElement.GetProperty("type").GetString();
 
                         switch (type) {
-                            case "ping":
+                            case "ping": {
                                 // Respond with a pong.
                                 var id = data.RootElement.GetProperty("id").GetInt32();
 
@@ -92,6 +95,39 @@ namespace InsightLogParser.Client.Websockets {
                                 await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response))), WebSocketMessageType.Text, true, cancellationToken);
 
                                 break;
+                            }
+                            case "screenshot": {
+                                // This requires Cetus, bail if it's not active.
+                                if (_mainThing == null || _mainThing.CetusClient == null) {
+                                    continue;
+                                }
+
+                                // Get the screenshot URL.
+                                var puzzleId = data.RootElement.GetProperty("puzzleId").GetInt32();
+                                if (puzzleId == 0) {
+                                    continue;
+                                }
+
+                                var screenshots = await _mainThing.CetusClient.GetPuzzleScreenshots(puzzleId);
+                                if (screenshots == null) {
+                                    continue;
+                                }
+                                    
+                                var first = screenshots.Where((s) => s.IsPrimaryCategory).FirstOrDefault();
+                                if (first == null) {
+                                    continue;
+                                }
+
+                                var response = new {
+                                    type = "screenshot",
+                                    puzzleId,
+                                    url = first.ImageUrl
+                                };
+
+                                await webSocket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response))), WebSocketMessageType.Text, true, cancellationToken);
+
+                                break;
+                            }
                         }
                     } catch (Exception) {
                         // Close the connection if the message is not valid JSON.
