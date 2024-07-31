@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Common.PuzzleParser;
@@ -41,6 +42,7 @@ public class GamePuzzleHandler
         var isWorldPuzzle = false;
         var incompatible = Enumerable.Empty<int>();
         (Coordinate? Primary, Coordinate? Secondary) coordinates = default;
+        float[]? sandboxMileStones = null;
 
         if (arg.Serialized != null)
         {
@@ -75,6 +77,11 @@ public class GamePuzzleHandler
 
                 //Coordinates
                 coordinates = GetCoordinates(puzzleType, deserialized, isOld);
+
+                //Flow Orb milestones
+                sandboxMileStones = deserialized.SandboxMilestones?.Split("-")
+                    .Select(x => float.Parse(x, CultureInfo.InvariantCulture))
+                    .ToArray();
             }
         }
 
@@ -87,6 +94,7 @@ public class GamePuzzleHandler
             IncompatibleIds = incompatible.ToList(),
             PrimaryCoordinate = coordinates.Primary,
             SecondaryCoordinate = coordinates.Secondary,
+            SandboxMilestones = sandboxMileStones,
         };
     }
 

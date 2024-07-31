@@ -38,5 +38,11 @@ namespace InsightLogParser.Common.ApiModels
 
         [JsonPropertyName("removedStaleSolves")]
         public ImportSolve[] RemovedStales { get; set; } = [];
+
+        [JsonPropertyName("serverAddedFlowOrbTimes")]
+        public int ServerAddedFlowOrbTimes { get; set; }
+
+        [JsonPropertyName("serverUpdatedFlowOrbTimes")]
+        public int ServerUpdatedFlowOrbTimes { get; set; }
     }
 }

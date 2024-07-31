@@ -40,4 +40,9 @@ public class InsightPuzzle
     /// The secondary coordinate of a puzzle, currently only used by matchboxes
     /// </summary>
     public Coordinate? SecondaryCoordinate { get; set; }
+
+    /// <summary>
+    /// The milestones of a puzzle, currently used by Flow Orbs
+    /// </summary>
+    public float[]? SandboxMilestones { get; set; }
 }

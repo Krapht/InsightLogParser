@@ -112,4 +112,7 @@ public class SerializedInfo
 
     [JsonPropertyName("shinyMeshTransform")]
     public string? ShinyMeshTransform { get; set; }
+
+    [JsonPropertyName("SandboxMilestones")]
+    public string? SandboxMilestones { get; set; }
 }
