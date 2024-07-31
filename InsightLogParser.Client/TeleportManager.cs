@@ -80,7 +80,6 @@ internal class TeleportManager
         if (_targetPuzzle?.KrakenId == puzzle.KrakenId)
         {
             ClearTarget();
-            return;
         }
 
         // If we solved a puzzle, we're obviously at that puzzle, so let's move to it if we have a coordinate for it.
@@ -90,6 +89,7 @@ internal class TeleportManager
             && puzzle.Type != PuzzleType.SightSeer //Already triggers a teleport log entry
             && puzzle.Type != PuzzleType.WanderingEcho //Might end up quite far away from its coordinate
             && puzzle.Type != PuzzleType.GlideRings //Might end up quite far away from its coordinate
+            //TODO: Think about also matchboxes, exclude? exclude if distance > x? use half-way point as teleport?
             )
         {
             Teleport(puzzle.PrimaryCoordinate!.Value);
