@@ -10,16 +10,22 @@ internal class ScreenshotManager
     private readonly GamePuzzleHandler _gamePuzzleHandler;
     private readonly MessageWriter _messageWriter;
     private readonly UserComputer _userComputer;
+    private readonly Configuration _configuration;
     private string? _lastScreenshotPath = null;
     private int? _lastSolvedPuzzle = null;
     private Action<CapturedScreenshot>? _callback = null;
     private bool _isSolved;
 
-    public ScreenshotManager(GamePuzzleHandler gamePuzzleHandler, MessageWriter messageWriter, UserComputer userComputer)
+    public ScreenshotManager(GamePuzzleHandler gamePuzzleHandler
+        , MessageWriter messageWriter
+        , UserComputer userComputer
+        , Configuration configuration
+    )
     {
         _gamePuzzleHandler = gamePuzzleHandler;
         _messageWriter = messageWriter;
         _userComputer = userComputer;
+        _configuration = configuration;
     }
 
     public void SetLastPuzzle(int puzzleId, bool solved)
@@ -82,6 +88,8 @@ internal class ScreenshotManager
                 return "Solved";
             case ScreenshotCategory.Location:
                 return "Location";
+            case ScreenshotCategory.Scenic:
+                return "Scenic";
             default:
                 return $"TODO: {category}";
         }
@@ -92,6 +100,8 @@ internal class ScreenshotManager
         var categories = GetScreenshotCategories(type, isSolved);
         foreach (var category in categories)
         {
+            if (category.Category == ScreenshotCategory.Scenic && !_configuration.EnableScenicScreenshots) continue;
+
             if (currentScreenshots.Contains(category.Category))
             {
                 yield return (category.Category, false);
@@ -114,11 +124,16 @@ internal class ScreenshotManager
             case PuzzleType.HiddenArchway:
             case PuzzleType.HiddenPentad:
             case PuzzleType.HiddenRing:
-            case PuzzleType.FlowOrbs:
             case PuzzleType.HiddenCube:
             case PuzzleType.ShyAura:
             case PuzzleType.GlideRings:
                 yield return (ScreenshotCategory.Location, "Where in the world you can find the puzzle", true, true);
+                yield return (ScreenshotCategory.Other, otherDescription, false, false);
+                break;
+
+            case PuzzleType.FlowOrbs:
+                yield return (ScreenshotCategory.Location, "Where in the world you can find the puzzle", true, true);
+                yield return (ScreenshotCategory.Scenic, "Good view of the puzzle, no markers or puzzle related HUD elements", false, true);
                 yield return (ScreenshotCategory.Other, otherDescription, false, false);
                 break;
 

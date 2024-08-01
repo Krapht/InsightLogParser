@@ -106,6 +106,10 @@ namespace InsightLogParser.Client.Menu
             var options = ScreenshotManager.GetScreenshotCategories(_capturedScreenshot.PuzzleType, _capturedScreenshot.IsSolved)
                 .Select((x, i) => (index: i, category: x.Category, menu: ((char?)('0'+i), x.Description)))
                 .ToList();
+            if (!_configuration.EnableScenicScreenshots)
+            {
+                options.RemoveAll(x => x.category == ScreenshotCategory.Scenic);
+            }
             var baseOptions = new (char? option, string text)[]
             {
                 (default, "Select category or any other key to cancel"),

@@ -18,6 +18,7 @@ public class Configuration
     public bool MonitorScreenshots { get; set; } = true;
     public bool ConfirmScreenshotDelete { get; set; } = true;
     public bool DeleteOnQuickUpload { get; set; } = false;
+    public bool EnableScenicScreenshots { get; set; } = false;
 
     //Cetus
     public string? CetusApiKey { get; set; }

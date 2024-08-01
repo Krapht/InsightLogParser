@@ -19,4 +19,9 @@ public enum ScreenshotCategory
     /// Applicable to HiddenArchway, HiddenPentad, HiddenRing, FlowOrbs, HiddenCube, ShyAura, GlideRings, Matchbox (both boxes)
     /// </summary>
     Location = 3,
+
+    /// <summary>
+    /// Applicable to FlowOrbs
+    /// </summary>
+    Scenic = 4,
 }
