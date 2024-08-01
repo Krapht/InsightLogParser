@@ -242,7 +242,7 @@ internal class MessageWriter
             if (isFirstSighting)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write("Fist sighting in cycle! ");
+                Console.Write("First sighting in cycle! ");
                 Console.ResetColor();;
             }
             Console.Write($"Unsolved: {unsolvedFresh}, Stale: {unsolvedStale}, TotalSeen: {sightingsCount}");
@@ -281,11 +281,17 @@ internal class MessageWriter
         }
     }
 
-    public void WriteOpened(string puzzleZone, string puzzleName, int puzzleId, TimeSpan? lastSolved)
+    public void WriteOpened(string puzzleZone, string puzzleName, int puzzleId, TimeSpan? lastSolved, bool isStale)
     {
         lock (_lock)
         {
             Console.Write("Opened ");
+            if (isStale)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write("STALE ");
+                Console.ResetColor();
+            }
             WritePuzzleName(puzzleName);
             Console.Write($" ({puzzleId}) in ");
             WriteZoneName(puzzleZone);

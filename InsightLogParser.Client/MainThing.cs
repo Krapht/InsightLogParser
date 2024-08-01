@@ -65,7 +65,7 @@ public class MainThing
         //Screenshots only makes sense in online mode
         if (spider.IsOnline() && configuration.MonitorScreenshots)
         {
-            var screenshotManager = new ScreenshotManager(_puzzleHandler, _messageWriter, computer);
+            var screenshotManager = new ScreenshotManager(_puzzleHandler, _messageWriter, computer, configuration);
             spider.SetScreenshotManager(screenshotManager);
             var screenshotFolder = computer.GetScreenshotFolder();
             if (!Directory.Exists(screenshotFolder))
