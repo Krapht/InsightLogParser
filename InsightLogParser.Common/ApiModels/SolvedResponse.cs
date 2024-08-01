@@ -8,6 +8,9 @@ public class SolvedResponse
     [JsonPropertyName("firstSighting")]
     public required bool FirstSighting { get; set; }
 
+    [JsonPropertyName("solvedByPlayerCount")]
+    public required int SolvedByPlayerCount { get; set; }
+
     [JsonPropertyName("sightings")]
     public Sighting[]? Sightings { get; set; }
 

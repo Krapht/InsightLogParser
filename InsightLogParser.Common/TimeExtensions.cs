@@ -31,4 +31,28 @@ public static class TimeExtensions
 
         return $"{span.Hours} hours, {span.Minutes} minutes and {span.Seconds} seconds";
     }
+
+    public static string ToAgoMinuteText(this TimeSpan span)
+    {
+        var days = span.Days;
+        var hours = span.Hours;
+        var minutes = span.Minutes;
+
+        if (days > 0)
+        {
+            return $"{days} days, {hours} hours and {minutes} minutes ago";
+        }
+
+        if (hours > 0)
+        {
+            return $"{hours} hours and {minutes} minutes ago";
+        }
+
+        if (minutes > 0)
+        {
+            return $"{minutes} minutes ago";
+        }
+
+        return "Less than a minute ago";
+    }
 }

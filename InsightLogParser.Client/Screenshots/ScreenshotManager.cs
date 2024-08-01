@@ -133,7 +133,7 @@ internal class ScreenshotManager
 
             case PuzzleType.FlowOrbs:
                 yield return (ScreenshotCategory.Location, "Where in the world you can find the puzzle", true, true);
-                yield return (ScreenshotCategory.Scenic, "Good view of the puzzle, no markers or puzzle related HUD elements", false, true);
+                yield return (ScreenshotCategory.Scenic, "Taken before first solve (no time recorded), florb selected, clear view of the puzzle. Manual moderation", false, true);
                 yield return (ScreenshotCategory.Other, otherDescription, false, false);
                 break;
 

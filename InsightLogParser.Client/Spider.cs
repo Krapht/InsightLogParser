@@ -146,7 +146,7 @@ namespace InsightLogParser.Client
                 var screenShotStrings = needsScreenshots
                     .Select(x => (CategoryName: ScreenshotManager.GetCategoryName(x.Category), IsRequested: x.IsMissing))
                     .ToList();
-                _messageWriter.WriteCetusParsed(sightingsCount, unsolved.Count(x => x.IsFresh), unsolved.Count(x => !x.IsFresh), screenShotStrings, cetusInfo.FirstSighting);
+                _messageWriter.WriteCetusParsed(sightingsCount, unsolved.Count(x => x.IsFresh), unsolved.Count(x => !x.IsFresh), screenShotStrings, cetusInfo.FirstSighting, cetusInfo.SolvedByPlayerCount);
                 if (screenShotStrings.Any(x => x.IsRequested))
                 {
                     _beeper.BeepForMissingScreenshot();

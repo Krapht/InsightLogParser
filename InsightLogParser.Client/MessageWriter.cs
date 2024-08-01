@@ -232,7 +232,7 @@ internal class MessageWriter
         }
     }
 
-    public void WriteCetusParsed(int sightingsCount, int unsolvedFresh, int unsolvedStale, IReadOnlyList<(string CategoryName, bool IsRequested)>? screenshotCategories, bool isFirstSighting)
+    public void WriteCetusParsed(int sightingsCount, int unsolvedFresh, int unsolvedStale, IReadOnlyList<(string CategoryName, bool IsRequested)>? screenshotCategories, bool isFirstSighting, int solvedByPlayerCount)
     {
         lock (_lock)
         {
@@ -245,7 +245,7 @@ internal class MessageWriter
                 Console.Write("First sighting in cycle! ");
                 Console.ResetColor();;
             }
-            Console.Write($"Unsolved: {unsolvedFresh}, Stale: {unsolvedStale}, TotalSeen: {sightingsCount}");
+            Console.Write($"Unsolved: {unsolvedFresh}, Stale: {unsolvedStale}, TotalSeen: {sightingsCount}, Solved by {solvedByPlayerCount} players");
             if (screenshotCategories != null)
             {
                 Console.Write(", Has Screenshot: ");
