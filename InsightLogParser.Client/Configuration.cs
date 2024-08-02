@@ -3,7 +3,7 @@ namespace InsightLogParser.Client;
 
 public class Configuration
 {
-    public static readonly int CurrentConfigurationVersion = 4;
+    public static readonly int CurrentConfigurationVersion = 5;
 
     public int ConfigVersion { get; set; } = CurrentConfigurationVersion;
 

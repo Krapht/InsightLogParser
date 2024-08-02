@@ -524,7 +524,7 @@ namespace InsightLogParser.Client
             _messageWriter.WriteInfo($"Server flagged {response.ServerAddedCount} previously unsolved puzzles as solved");
             _messageWriter.WriteInfo($"Server flagged {response.ServerRemovedCount} previously solved puzzles as unsolved as they were stale");
             _messageWriter.WriteInfo($"Server added {response.ServerAddedFlowOrbTimes} new flow orb times");
-            _messageWriter.WriteInfo($"Server updated {response.ServerAddedFlowOrbTimes} existing flow orb times");
+            _messageWriter.WriteInfo($"Server updated {response.ServerUpdatedFlowOrbTimes} existing flow orb times");
 
             //Update local db
             _db.ImportSaves(response.ImportedSolves, response.AllSolves.ToHashSet(), response.MostRecentSolve);
