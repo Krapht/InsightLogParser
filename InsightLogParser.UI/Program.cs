@@ -4,7 +4,7 @@ namespace InsightLogParser.UI {
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main() {
+        static void Main(string[] args) {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
@@ -13,7 +13,10 @@ namespace InsightLogParser.UI {
             Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
-            Application.Run(new Main());
+            // Parse command-line arguments to get the port number
+            int port = ParsePortArgument(args);
+
+            Application.Run(new Main(port));
         }
 
         // Handle UI thread exceptions
@@ -32,5 +35,18 @@ namespace InsightLogParser.UI {
                 MessageBox.Show(ex.Message, "Unhandled Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        // Parse the port argument from the command-line arguments
+        static int ParsePortArgument(string[] args) {
+            for (int i = 0; i < args.Length; i++) {
+                if (args[i] == "-port" && i + 1 < args.Length) {
+                    if (int.TryParse(args[i + 1], out int port)) {
+                        return port;
+                    }
+                }
+            }
+            throw new ArgumentException("Port number not specified or invalid.");
+        }
+
     }
 }

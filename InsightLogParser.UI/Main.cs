@@ -17,10 +17,11 @@ namespace InsightLogParser.UI {
         private int _routeNumber;
         private int _routeLength;
         
-        public Main() {
+        public Main(int port) {
             InitializeComponent();
             _webSocketClient.MessageReceived += WebSocketClient_OnMessageReceived;
-            _ = _webSocketClient.ConnectAsync();
+            _ = _webSocketClient.ConnectAsync(port);
+            RemoveOldScreenshots();
         }
 
         private async void WebSocketClient_OnMessageReceived(object sender, MessageReceivedEventArgs e) {
@@ -313,6 +314,19 @@ namespace InsightLogParser.UI {
                 picScreenshot.Image?.Dispose();
                 picScreenshot.Image = image;
                 picScreenshot.Update();
+            }
+        }
+
+        private void RemoveOldScreenshots() {
+            // Remove any files older than 24 hours from the cache directory.
+            if (Directory.Exists(cacheDirectory)) {
+                var files = Directory.GetFiles(cacheDirectory);
+                foreach (var file in files) {
+                    var fileInfo = new FileInfo(file);
+                    if (fileInfo.LastWriteTimeUtc < DateTime.UtcNow.AddDays(-1)) {
+                        fileInfo.Delete();
+                    }
+                }
             }
         }
     }

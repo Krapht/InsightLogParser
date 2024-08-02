@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using InsightLogParser.Client.Websockets;
 
 namespace InsightLogParser.Client.Menu;
 
@@ -66,9 +67,13 @@ internal class RootMenu : IMenu
                 {
                     _writer.WriteDebug("UI is already running");
                 }
+                else if (Server.Port == 0)
+                {
+                    _writer.WriteError("Server is not running");
+                }
                 else
                 {
-                    Process.Start("InsightLogParser.UI.exe");
+                    Process.Start("InsightLogParser.UI.exe", $"-port {Server.Port}");
                 }
                 
                 return MenuResult.Ok;

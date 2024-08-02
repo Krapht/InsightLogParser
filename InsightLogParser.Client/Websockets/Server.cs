@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -9,12 +10,24 @@ namespace InsightLogParser.Client.Websockets {
         private static readonly ConcurrentBag<WebSocket> _clients = [];
         private static MainThing _mainThing;
 
+        internal static int Port { get; set; }
+
         internal static async Task StartWebSocketServer(CancellationToken cancellationToken, MainThing mainThing) {
             _mainThing = mainThing;
 
+            // Find a random open port.
+            try {
+                using var tcpListener = new TcpListener(IPAddress.Loopback, 0);
+                tcpListener.Start();
+                Port = ((IPEndPoint)tcpListener.LocalEndpoint).Port;
+                tcpListener.Stop();
+            } catch (Exception) {
+                throw new Exception("Failed to find an open port.");
+            }
+
             // Create HTTP listener.
             var httpListener = new HttpListener();
-            httpListener.Prefixes.Add("http://localhost:38254/ws/");
+            httpListener.Prefixes.Add($"http://localhost:{Port}/ws/");
             httpListener.Start();
 
             try {

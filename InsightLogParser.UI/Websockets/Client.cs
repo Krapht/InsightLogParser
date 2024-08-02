@@ -9,9 +9,9 @@ namespace InsightLogParser.UI.Websockets {
 
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
-        public async Task ConnectAsync() {
+        public async Task ConnectAsync(int port) {
             try {
-                await _clientWebSocket.ConnectAsync(new Uri("ws://localhost:38254/ws/"), _cancellationTokenSource.Token);
+                await _clientWebSocket.ConnectAsync(new Uri($"ws://localhost:{port}/ws/"), _cancellationTokenSource.Token);
             } catch (Exception ex) {
                 _cancellationTokenSource.Cancel();
             }
