@@ -512,14 +512,10 @@ internal class MessageWriter
     {
         lock (_lock)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("This will upload your offline save to extract solved puzzles from it");
-            Console.WriteLine("The server will add solves for all relevant solved puzzles from your offline save");
-            Console.WriteLine("Additionally it will REMOVE any solved puzzles not marked as solved in your offline save that are dated EARLIER than the MOST RECENT solved puzzle in your offline save");
-            Console.WriteLine("This will clean up any stale solves you might have that are not actually counted by the game");
-            Console.WriteLine("Please be aware that just because it works for me does not mean it will work for you");
-            Console.WriteLine("*** Before using this, make sure that your offline save file is fully up to date with your online save ***");
-            Console.WriteLine("At your own risk, press [y] three times to proceed or any other key to cancel");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("This will upload your offline save to add new puzzles, remove stale ones and update leaderboards");
+            Console.WriteLine("Will also update your local db to match Cetus");
+            Console.WriteLine("Press [y] to continue or any other key to cancel");
             Console.ResetColor();
         }
     }

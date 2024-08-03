@@ -64,17 +64,14 @@ internal class AdvancedMenu : IMenu
     private async Task ConfirmOfflineSaveUpload()
     {
         _writer.ConfirmOfflineSaveUpload();
-        for (var i = 0; i < 3; i++)
+        var pressedKey = Console.ReadKey(false);
+        if (pressedKey.Key != ConsoleKey.Y)
         {
-            var pressedKey = Console.ReadKey(false);
-            if (pressedKey.Key != ConsoleKey.Y)
-            {
-                _writer.WriteLine("");
-                _writer.WriteInfo("Cancelled");
-                return;
-            }
             _writer.WriteLine("");
+            _writer.WriteInfo("Cancelled");
+            return;
         }
+        _writer.WriteLine("");
 
         await _spider.ImportSaveGameAsync();
     }
