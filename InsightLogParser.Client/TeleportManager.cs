@@ -1,4 +1,5 @@
-﻿using InsightLogParser.Common.PuzzleParser;
+using InsightLogParser.Common.PuzzleParser;
+using InsightLogParser.Client.Websockets;
 using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Client;
@@ -30,6 +31,15 @@ internal class TeleportManager
         }
 
         _lastTeleport = destination;
+        _ = Server.SendAsync(new {
+            type = "movePlayer",
+            destination = new {
+                destination.X,
+                destination.Y,
+                destination.Z
+            }
+        });
+
         _lastTeleportTime = DateTimeOffset.UtcNow;
         _writer.WriteTeleportDebug($"Teleported to X: {destination.X:F0} Y: {destination.Y:F0} Z: {destination.Z:F0}");
 

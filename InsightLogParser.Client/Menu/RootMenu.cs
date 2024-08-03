@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using InsightLogParser.Client.Websockets;
 
 namespace InsightLogParser.Client.Menu;
 
@@ -19,6 +20,7 @@ internal class RootMenu : IMenu
             {
                 yield return ('w', "Log-in to cetus web ui");
             }
+            yield return ('U', "--> Open the UI [WIP]");
             yield return ('c', "--> Configuration [WIP]");
             yield return ('s', "--> Statistics");
             yield return ('r', "--> Routes");
@@ -59,6 +61,21 @@ internal class RootMenu : IMenu
                 return MenuResult.Ok;
             case 'C':
                 _menuHandler.EnterMenu(new CheeseMenu(_spider, _writer));
+                return MenuResult.Ok;
+            case 'U':
+                if (Process.GetProcessesByName("InsightLogParser.UI").Length != 0)
+                {
+                    _writer.WriteDebug("UI is already running");
+                }
+                else if (Server.Port == 0)
+                {
+                    _writer.WriteError("Server is not running");
+                }
+                else
+                {
+                    Process.Start("InsightLogParser.UI.exe", $"-port {Server.Port}");
+                }
+                
                 return MenuResult.Ok;
             default:
                 return MenuResult.NotValidOption;

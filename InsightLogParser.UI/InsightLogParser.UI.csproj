@@ -1,0 +1,98 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Images\ArmillaryRings.png" />
+    <None Remove="Resources\Images\CompassArrow.png" />
+    <None Remove="Resources\Images\CrystalLabyrinth.png" />
+    <None Remove="Resources\Images\CurrentMarker.png" />
+    <None Remove="Resources\Images\Down.png" />
+    <None Remove="Resources\Images\FlowOrbs.png" />
+    <None Remove="Resources\Images\GlideRings.png" />
+    <None Remove="Resources\Images\HiddenArchway.png" />
+    <None Remove="Resources\Images\HiddenCube.png" />
+    <None Remove="Resources\Images\HiddenPentad.png" />
+    <None Remove="Resources\Images\HiddenRing.png" />
+    <None Remove="Resources\Images\LightMotif.png" />
+    <None Remove="Resources\Images\LogicGrid.png" />
+    <None Remove="Resources\Images\Map.png" />
+    <None Remove="Resources\Images\Marker.png" />
+    <None Remove="Resources\Images\Matchbox.png" />
+    <None Remove="Resources\Images\MatchThree.png" />
+    <None Remove="Resources\Images\MemoryGrid.png" />
+    <None Remove="Resources\Images\MorphicFractal.png" />
+    <None Remove="Resources\Images\MusicGrid.png" />
+    <None Remove="Resources\Images\PatternGrid.png" />
+    <None Remove="Resources\Images\PhasicDial.png" />
+    <None Remove="Resources\Images\RollingBlock.png" />
+    <None Remove="Resources\Images\SentinelStones.png" />
+    <None Remove="Resources\Images\ShiftingMosaic.png" />
+    <None Remove="Resources\Images\ShyAura.png" />
+    <None Remove="Resources\Images\Sightseer.png" />
+    <None Remove="Resources\Images\Skydrop.png" />
+    <None Remove="Resources\Images\Up.png" />
+    <None Remove="Resources\Images\WanderingEcho.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Images\ArmillaryRings.png" />
+    <EmbeddedResource Include="Resources\Images\CompassArrow.png" />
+    <EmbeddedResource Include="Resources\Images\CrystalLabyrinth.png" />
+    <EmbeddedResource Include="Resources\Images\CurrentMarker.png" />
+    <EmbeddedResource Include="Resources\Images\Down.png" />
+    <EmbeddedResource Include="Resources\Images\FlowOrbs.png" />
+    <EmbeddedResource Include="Resources\Images\GlideRings.png" />
+    <EmbeddedResource Include="Resources\Images\HiddenArchway.png" />
+    <EmbeddedResource Include="Resources\Images\HiddenCube.png" />
+    <EmbeddedResource Include="Resources\Images\HiddenPentad.png" />
+    <EmbeddedResource Include="Resources\Images\HiddenRing.png" />
+    <EmbeddedResource Include="Resources\Images\LightMotif.png" />
+    <EmbeddedResource Include="Resources\Images\LogicGrid.png" />
+    <EmbeddedResource Include="Resources\Images\Map.png" />
+    <EmbeddedResource Include="Resources\Images\Marker.png" />
+    <EmbeddedResource Include="Resources\Images\Matchbox.png" />
+    <EmbeddedResource Include="Resources\Images\MatchThree.png" />
+    <EmbeddedResource Include="Resources\Images\MemoryGrid.png" />
+    <EmbeddedResource Include="Resources\Images\MorphicFractal.png" />
+    <EmbeddedResource Include="Resources\Images\MusicGrid.png" />
+    <EmbeddedResource Include="Resources\Images\PatternGrid.png" />
+    <EmbeddedResource Include="Resources\Images\PhasicDial.png" />
+    <EmbeddedResource Include="Resources\Images\RollingBlock.png" />
+    <EmbeddedResource Include="Resources\Images\SentinelStones.png" />
+    <EmbeddedResource Include="Resources\Images\ShiftingMosaic.png" />
+    <EmbeddedResource Include="Resources\Images\ShyAura.png" />
+    <EmbeddedResource Include="Resources\Images\Sightseer.png" />
+    <EmbeddedResource Include="Resources\Images\Skydrop.png" />
+    <EmbeddedResource Include="Resources\Images\Up.png" />
+    <EmbeddedResource Include="Resources\Images\WanderingEcho.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\InsightLogParser.Common\InsightLogParser.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Main.cs" />
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

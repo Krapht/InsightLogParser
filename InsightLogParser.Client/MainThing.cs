@@ -23,6 +23,10 @@ public class MainThing
     private readonly TimeTools _timeTools;
     private ScreenshotMonitor? _screenshotMonitor = null;
 
+    internal ICetusClient CetusClient {
+        get => _apiClient;
+    }
+
     public MainThing(CancellationToken forcedExitToken)
     {
         _forcedExitToken = forcedExitToken;
