@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using InsightLogParser.Common.World;
 using InsightLogParser.UI.Websockets;
@@ -8,7 +7,7 @@ namespace InsightLogParser.UI {
     public partial class Main : Form {
         private readonly Client _webSocketClient = new();
 
-        private readonly string cacheDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "InsightLogParser", "cache");
+        private readonly string cacheDirectory = "cache/screenshots";
 
         private Coordinate _location;
         private Coordinate _target;
@@ -16,12 +15,12 @@ namespace InsightLogParser.UI {
         private int _puzzleId;
         private int _routeNumber;
         private int _routeLength;
-        
+
         public Main(int port) {
             InitializeComponent();
             _webSocketClient.MessageReceived += WebSocketClient_OnMessageReceived;
             _ = _webSocketClient.ConnectAsync(port);
-            RemoveOldScreenshots();
+            //RemoveOldScreenshots();
         }
 
         private async void WebSocketClient_OnMessageReceived(object sender, MessageReceivedEventArgs e) {
@@ -138,8 +137,6 @@ namespace InsightLogParser.UI {
             if (distance == 0) {
                 return;
             }
-
-            var assembly = Assembly.GetExecutingAssembly();
 
             var image = _puzzleType switch {
                 PuzzleType.ArmillaryRings => Properties.Resources.ArmillaryRings,
@@ -298,7 +295,7 @@ namespace InsightLogParser.UI {
             var response = await client.GetAsync(url);
             var stream = await response.Content.ReadAsStreamAsync();
             var image = Image.FromStream(stream);
-            
+
             // Cache the image to disk.
             Directory.CreateDirectory(cacheDirectory);
             var cachePath = Path.Combine(cacheDirectory, $"{puzzleId}.png");
