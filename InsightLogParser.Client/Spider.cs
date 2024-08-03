@@ -76,9 +76,9 @@ namespace InsightLogParser.Client
 
         public void EndSession(DateTimeOffset timestamp)
         {
+            _messageWriter.SessionEnded(timestamp, _serverAddress);
             _sessionStart = null;
             _serverAddress = null;
-            _messageWriter.SessionEnded(timestamp);
         }
 
         public async Task SessionBeingDisconnectedAsync()

@@ -146,13 +146,14 @@ internal class MessageWriter
         }
     }
 
-    public void SessionEnded(DateTimeOffset timestamp)
+    public void SessionEnded(DateTimeOffset timestamp, string? serverAddress)
     {
         lock (_lock)
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine($"Session ended at {timestamp.ToIso8601()}");
             Console.ResetColor();
+            Console.WriteLine($"Last server was: {serverAddress}");
         }
     }
 
