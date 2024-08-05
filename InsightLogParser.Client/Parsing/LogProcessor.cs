@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
-using InsightLogParser.Common.World;
+﻿using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Client.Parsing
 {
@@ -101,15 +99,12 @@ namespace InsightLogParser.Client.Parsing
                     {
                         switch (logEvent.Type)
                         {
-                            case LogEventType.SessionStart:
-                                _spider.StartSession(logEvent.LogTime);
-                                break;
                             case LogEventType.ConnectingToServer:
                                 _spider.ConnectingToServer(logEvent.ServerAddress!);
                                 break;
 
                             case LogEventType.JoinedServer:
-                                _spider.SetServer(logEvent.ServerAddress!);
+                                _spider.SetServer(logEvent.ServerAddress!, logEvent.LogTime);
                                 break;
 
                             case LogEventType.SessionEnd:
@@ -143,7 +138,6 @@ namespace InsightLogParser.Client.Parsing
                                         await _spider.ClosedAsync(logEvent.LogTime, puzzleId, zone, type, difficulty).ConfigureAwait(false);
                                         break;
                                     case "PressStartButton":
-                                        _spider.StartSession(logEvent.LogTime);
                                         break;
                                     //Ignore so hard it's not even in the debug output
                                     case "gm_heartbeat":

@@ -56,17 +56,12 @@ namespace InsightLogParser.Client
 
         public void SetScreenshotManager(ScreenshotManager screenshotManager)  { _screenshotManager = screenshotManager; }
 
-        public void StartSession(DateTimeOffset timestamp)
-        {
-            _sessionStart = timestamp;
-            _messageWriter.SessionStarted(timestamp);
-        }
-
-        public void SetServer(string serverAddress)
+        public void SetServer(string serverAddress, DateTimeOffset timestamp)
         {
             _serverAddress = serverAddress;
+            _sessionStart = timestamp;
             _serverTracker.Connected(serverAddress);
-            _messageWriter.ConnectedToServer(serverAddress);
+            _messageWriter.ConnectedToServer(serverAddress, timestamp);
         }
 
         public void ConnectingToServer(string serverAddress)

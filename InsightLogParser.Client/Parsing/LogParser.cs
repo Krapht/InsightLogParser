@@ -89,9 +89,10 @@ namespace InsightLogParser.Client.Parsing
                 var joinedServer = MatchJoinedServer(line);
                 if (joinedServer != null)
                 {
-                    yield return new LogEvent()
+                    yield return new LogEvent
                     {
                         Type = LogEventType.JoinedServer,
+                        LogTime = joinedServer.Value.eventTime,
                         ServerAddress = joinedServer.Value.serverAddress
                     };
                 }
