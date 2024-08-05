@@ -126,22 +126,12 @@ internal class MessageWriter
         }
     }
 
-    public void SessionStarted(DateTimeOffset timestamp)
+    public void ConnectedToServer(string serverAddress, DateTimeOffset timestamp)
     {
         lock (_lock)
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine($"Session started at {timestamp.ToIso8601()}");
-            Console.ResetColor();
-        }
-    }
-
-    public void ConnectedToServer(string serverAddress)
-    {
-        lock (_lock)
-        {
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine($"Game connected to server {serverAddress}");
+            Console.WriteLine($"Game connected to server {serverAddress} at {timestamp.ToIso8601()}");
             Console.ResetColor();
         }
     }
@@ -153,7 +143,10 @@ internal class MessageWriter
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine($"Session ended at {timestamp.ToIso8601()}");
             Console.ResetColor();
-            Console.WriteLine($"Last server was: {serverAddress}");
+            Console.Write("Last server was: ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"{serverAddress}");
+            Console.ResetColor();
         }
     }
 
