@@ -16,6 +16,9 @@ namespace InsightLogParser.Common.ApiModels
         public required string ImageUrl { get; set; }
 
         [JsonPropertyName("isPrimaryCategory")]
-        public bool IsPrimaryCategory { get; set; }
+        public required bool IsPrimaryCategory { get; set; }
+
+        [JsonPropertyName("uploader")]
+        public string? Uploader { get; set; }
     }
 }

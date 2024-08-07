@@ -10,7 +10,7 @@ using InsightLogParser.Common.World;
 
 namespace InsightLogParser.Client
 {
-    internal class Spider
+    internal class Spider : ISocketParserCommands
     {
         private readonly MessageWriter _messageWriter;
         private readonly Beeper _beeper;
@@ -20,9 +20,10 @@ namespace InsightLogParser.Client
         private readonly TimeTools _timeTools;
         private readonly GamePuzzleHandler _gamePuzzleHandler;
         private readonly UserComputer _computer;
-        private readonly TeleportManager _teleportManager;
         private readonly PuzzleRouter _puzzleRouter;
         private readonly ServerTracker _serverTracker;
+        private readonly ISocketUiCommands _uiCommands;
+        private readonly TargetManager _targetManager;
         private ScreenshotManager? _screenshotManager = null;
 
         //State
@@ -37,9 +38,10 @@ namespace InsightLogParser.Client
             , TimeTools timeTools
             , GamePuzzleHandler gamePuzzleHandler
             , UserComputer computer
-            , TeleportManager teleportManager
             , PuzzleRouter puzzleRouter
             , ServerTracker serverTracker
+            , ISocketUiCommands uiCommands
+            , TargetManager targetManager
             )
         {
             _messageWriter = messageWriter;
@@ -50,9 +52,10 @@ namespace InsightLogParser.Client
             _timeTools = timeTools;
             _gamePuzzleHandler = gamePuzzleHandler;
             _computer = computer;
-            _teleportManager = teleportManager;
             _puzzleRouter = puzzleRouter;
             _serverTracker = serverTracker;
+            _uiCommands = uiCommands;
+            _targetManager = targetManager;
         }
 
         public void SetScreenshotManager(ScreenshotManager screenshotManager)  { _screenshotManager = screenshotManager; }
@@ -154,7 +157,7 @@ namespace InsightLogParser.Client
             var puzzle = _gamePuzzleHandler.PuzzleDatabase.Values.FirstOrDefault(p => p.KrakenId == puzzleId);
             if (puzzle != null)
             {
-                _teleportManager.HandleSolved(puzzle);
+                _targetManager.HandleSolved(puzzle);
             }
             RouteHandleSolved(puzzleId);
 
@@ -425,11 +428,6 @@ namespace InsightLogParser.Client
             }
         }
 
-        public void Teleport(Coordinate coord)
-        {
-            _teleportManager.Teleport(coord);
-        }
-
         public void TargetPuzzle(int puzzleId)
         {
             if (!_gamePuzzleHandler.PuzzleDatabase.TryGetValue(puzzleId, out var targetPuzzle))
@@ -446,38 +444,27 @@ namespace InsightLogParser.Client
                 return;
             }
 
-            _teleportManager.SetTarget(targetCoord.Value, targetPuzzle);
-            _ = Server.SendAsync(new {
-                type = "setTarget",
-                target = new {
-                    targetCoord.Value.X,
-                    targetCoord.Value.Y,
-                    targetCoord.Value.Z
-                },
-                puzzleType = (int)targetPuzzle.Type,
-                puzzleId = targetPuzzle.KrakenId,
-                routeNumber = 0,
-                routeLength = 0
-            });
-
+            _targetManager.SetTarget(targetCoord.Value, targetPuzzle);
+            _uiCommands.SetTarget(targetCoord.Value, targetPuzzle, 0, 0);
             _messageWriter.WriteInfo($"Targeting {puzzleName} with id {puzzleId}");
         }
 
         public void TargetOtherMatchbox()
         {
-            var lastTeleport = _teleportManager.GetLastTeleport();
-            if (lastTeleport == null)
+            if (!_targetManager.HasLastPosition())
             {
                 _messageWriter.WriteError("No recorded last teleport");
                 return;
             }
+
+            var lastPosition = _targetManager.GetLastPosition();
 
             var targetMatchbox = _gamePuzzleHandler.PuzzleDatabase.Values
                 .Where(x => x.IsWorldPuzzle && x.Type == PuzzleType.MatchBox)
                 .Select(x => new[] { (Puzzle: x, Coordinate: x.PrimaryCoordinate), (Puzzle: x, Coordinate: x.SecondaryCoordinate) })
                 .SelectMany(x => x)
                 .Where(x => x.Coordinate != null)
-                .Select(x => (x.Puzzle, Distance: x.Coordinate!.Value.GetDistance2d(lastTeleport.Value)))
+                .Select(x => (x.Puzzle, Distance: x.Coordinate!.Value.GetDistance2d(lastPosition)))
                 .OrderBy(x => x.Distance)
                 .FirstOrDefault();
 
@@ -488,26 +475,15 @@ namespace InsightLogParser.Client
             }
 
             var boxes = new[] { targetMatchbox.Puzzle.PrimaryCoordinate.Value, targetMatchbox.Puzzle.SecondaryCoordinate.Value };
-            var furthest = boxes.OrderByDescending(x => x.GetDistance2d(lastTeleport.Value)).FirstOrDefault();
+            var furthest = boxes.OrderByDescending(x => x.GetDistance2d(lastPosition)).FirstOrDefault();
             _messageWriter.WriteInfo($"Targeting Matchbox {targetMatchbox.Puzzle.KrakenId}");
-            _teleportManager.SetTarget(furthest, targetMatchbox.Puzzle);
-            _ = Server.SendAsync(new {
-                type = "setTarget",
-                target = new {
-                    furthest.X,
-                    furthest.Y,
-                    furthest.Z
-                },
-                puzzleType = (int)PuzzleType.MatchBox,
-                puzzleId = targetMatchbox.Puzzle.KrakenId,
-                routeNumber = 0,
-                routeLength = 0
-            });
+            _targetManager.SetTarget(furthest, targetMatchbox.Puzzle);
+            _uiCommands.SetTarget(furthest, targetMatchbox.Puzzle, 0, 0);
         }
 
         public void ClearTarget()
         {
-            _teleportManager.ClearTarget();
+            _targetManager.ClearTarget();
             _messageWriter.WriteInfo("Target cleared");
             ResumeRoute();
         }
@@ -553,12 +529,13 @@ namespace InsightLogParser.Client
 
         public async Task ListClosestAsync(int numberToList, bool use2dDistance)
         {
-            var lastTeleport = _teleportManager.GetLastTeleport();
-            if (lastTeleport == null)
+            if (!_targetManager.HasLastPosition())
             {
                 _messageWriter.WriteError("No recorded last teleport");
                 return;
             }
+
+            var lastPosition = _targetManager.GetLastPosition();
 
             double GetDistance(Coordinate a, Coordinate b)
             {
@@ -571,7 +548,7 @@ namespace InsightLogParser.Client
                 .Select(x => new[] { (Puzzle: x, Coordinate: x.PrimaryCoordinate), (Puzzle: x, Coordinate: x.SecondaryCoordinate) })
                 .SelectMany(x => x)
                 .Where(x => x.Coordinate != null)
-                .Select(x => (x.Puzzle, Distance: GetDistance(x.Coordinate!.Value, lastTeleport.Value)))
+                .Select(x => (x.Puzzle, Distance: GetDistance(x.Coordinate!.Value, lastPosition)))
                 .OrderBy(x => x.Distance)
                 .Take(numberToList)
                 .ToList();
@@ -619,7 +596,7 @@ namespace InsightLogParser.Client
             if (current == null) return;
             if (current.Value.Node.Puzzle.KrakenId != puzzleId)
             {
-                if (!_teleportManager.HasTarget())
+                if (!_targetManager.HasTarget())
                 {
                     ResumeRoute();
                 }
@@ -638,7 +615,7 @@ namespace InsightLogParser.Client
             var solved = _db.GetSolvedIds(puzzleZone).ToList();
             var unsolvedPool = pool.Where(x => !solved.Contains(x.KrakenId)).ToList();
 
-            var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
+            var startCoordinate = _targetManager.GetLastPosition();
             _puzzleRouter.SetRoute(unsolvedPool.Select(x => new RouteNode
             {
                 Puzzle = x,
@@ -660,7 +637,7 @@ namespace InsightLogParser.Client
             var solved = _db.GetSolvedIds(puzzleZone, puzzleType).ToList();
             var unsolvedPool = pool.Where(x => !solved.Contains(x.KrakenId)).ToList();
 
-            var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
+            var startCoordinate = _targetManager.GetLastPosition();
             _puzzleRouter.SetRoute(unsolvedPool.Select(x => new RouteNode()
             {
                 Puzzle = x,
@@ -696,7 +673,7 @@ namespace InsightLogParser.Client
                 return;
             }
 
-            var startCoordinate = _teleportManager.GetLastTeleport() ?? default;
+            var startCoordinate = _targetManager.GetLastPosition();
             _puzzleRouter.SetRoute(joined.Select(x => new RouteNode()
             {
                 Puzzle = x.puzzle,
@@ -721,35 +698,21 @@ namespace InsightLogParser.Client
             });
         }
 
-        public void NextRouteWaypoint()
+        public bool NextRouteWaypoint()
         {
             var next = _puzzleRouter.NextNode();
-            var currentCoordinate = _teleportManager.GetLastTeleport() ?? default;
+            var currentCoordinate = _targetManager.GetLastPosition();
 
-            if (next == null) return;
+            if (next == null) return false;
+            var nextPuzzle = next.Value.Node.Puzzle;
 
-            _teleportManager.SetTarget(next.Value.Node.Puzzle.PrimaryCoordinate!.Value, next.Value.Node.Puzzle);
-            _ = Server.SendAsync(new {
-                type = "setTarget",
-                target = new {
-                    next.Value.Node.Puzzle.PrimaryCoordinate!.Value.X,
-                    next.Value.Node.Puzzle.PrimaryCoordinate!.Value.Y,
-                    next.Value.Node.Puzzle.PrimaryCoordinate!.Value.Z
-                },
-                puzzleType = (int)next.Value.Node.Puzzle.Type,
-                puzzleId = next.Value.Node.Puzzle.KrakenId,
-                routeNumber = next.Value.Index,
-                routeLength = next.Value.Max
-            });
+            _targetManager.SetTarget(nextPuzzle.PrimaryCoordinate!.Value, nextPuzzle);
+            _uiCommands.SetTarget(nextPuzzle.PrimaryCoordinate!.Value, nextPuzzle, next.Value.Index, next.Value.Max);
 
             WriteWaypointMessage(next.Value.Node, next.Value.Index, next.Value.Max);
-            TeleportManager.WriteDistance(currentCoordinate, next.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter, null);
-        }
+            TargetManager.WriteDistance(currentCoordinate, nextPuzzle.PrimaryCoordinate!.Value, _messageWriter, null);
 
-        public void CurrentRouteWaypoint()
-        {
-            var current = _puzzleRouter.CurrentNode();
-            if (current == null) return;
+            return true;
         }
 
         public void OpenCurrentWaypointOnCetus()
@@ -763,28 +726,20 @@ namespace InsightLogParser.Client
             OpenPuzzleOnCetus(current.Value.Node.Puzzle.KrakenId);
         }
 
-        public void PreviousRouteWaypoint()
+        public bool PreviousRouteWaypoint()
         {
             var previous = _puzzleRouter.PreviousNode();
-            var currentCoordinate = _teleportManager.GetLastTeleport() ?? default;
+            var currentCoordinate = _targetManager.GetLastPosition();
 
-            if (previous == null) return;
-            _teleportManager.SetTarget(previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, previous.Value.Node.Puzzle);
-            _ = Server.SendAsync(new {
-                type = "setTarget",
-                target = new {
-                    previous.Value.Node.Puzzle.PrimaryCoordinate!.Value.X,
-                    previous.Value.Node.Puzzle.PrimaryCoordinate!.Value.Y,
-                    previous.Value.Node.Puzzle.PrimaryCoordinate!.Value.Z
-                },
-                puzzleType = (int)previous.Value.Node.Puzzle.Type,
-                puzzleId = previous.Value.Node.Puzzle.KrakenId,
-                routeNumber = previous.Value.Index,
-                routeLength = previous.Value.Max
-            });
+            if (previous == null) return false;
+            var prevPuzzle = previous.Value.Node.Puzzle;
+
+            _targetManager.SetTarget(prevPuzzle.PrimaryCoordinate!.Value, prevPuzzle);
+            _uiCommands.SetTarget(prevPuzzle.PrimaryCoordinate!.Value, prevPuzzle, previous.Value.Index, previous.Value.Max);
 
             WriteWaypointMessage(previous.Value.Node, previous.Value.Index, previous.Value.Max);
-            TeleportManager.WriteDistance(currentCoordinate, previous.Value.Node.Puzzle.PrimaryCoordinate!.Value, _messageWriter, null);
+            TargetManager.WriteDistance(currentCoordinate, prevPuzzle.PrimaryCoordinate!.Value, _messageWriter, null);
+            return true;
         }
 
         public bool HasRoute()
@@ -802,30 +757,38 @@ namespace InsightLogParser.Client
         {
             if (!HasRoute()) return;
 
-            if (!_teleportManager.HasTarget())
+            if (!_targetManager.HasTarget())
             {
                 var current = _puzzleRouter.CurrentNode();
                 if (current == null) return;
 
                 // Retarget the current node if it's not the one we just solved, and we don't currently have a target.
                 _messageWriter.WriteInfo("Resuming Route");
-                _teleportManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle);
-                _ = Server.SendAsync(new {
-                    type = "setTarget",
-                    target = new {
-                        current.Value.Node.Puzzle.PrimaryCoordinate!.Value.X,
-                        current.Value.Node.Puzzle.PrimaryCoordinate!.Value.Y,
-                        current.Value.Node.Puzzle.PrimaryCoordinate!.Value.Z
-                    },
-                    puzzleType = (int)current.Value.Node.Puzzle.Type,
-                    puzzleId = current.Value.Node.Puzzle.KrakenId,
-                    routeNumber = current.Value.Index,
-                    routeLength = current.Value.Max
-                });
+                _targetManager.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle);
+                _uiCommands.SetTarget(current.Value.Node.Puzzle.PrimaryCoordinate!.Value, current.Value.Node.Puzzle, current.Value.Index, current.Value.Max);
 
                 WriteWaypointMessage(current.Value.Node, current.Value.Index, current.Value.Max);
             }
         }
+        #endregion
+
+        #region ISocketParserCommands
+
+        public async Task<PuzzleScreenshotsDetails[]?> GetPuzzleScreenshotsAsync(int puzzleId)
+        {
+            return await _cetusClient.GetPuzzleScreenshots(puzzleId).ConfigureAwait(ConfigureAwaitOptions.None);
+        }
+
+        public bool RouteNext()
+        {
+            return NextRouteWaypoint();
+        }
+
+        public bool RoutePrev()
+        {
+            return PreviousRouteWaypoint();
+        }
+
         #endregion
     }
 }

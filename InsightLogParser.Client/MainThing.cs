@@ -1,8 +1,10 @@
-﻿using InsightLogParser.Client.Cetus;
+﻿using System.Diagnostics;
+using InsightLogParser.Client.Cetus;
 using InsightLogParser.Client.Menu;
 using InsightLogParser.Client.Parsing;
 using InsightLogParser.Client.Routing;
 using InsightLogParser.Client.Screenshots;
+using InsightLogParser.Client.Websockets;
 using InsightLogParser.Common;
 using InsightLogParser.Common.PuzzleParser;
 using InsightLogParser.Common.World;
@@ -22,10 +24,7 @@ public class MainThing
     private ICetusClient _apiClient = null!;
     private readonly TimeTools _timeTools;
     private ScreenshotMonitor? _screenshotMonitor = null;
-
-    internal ICetusClient CetusClient {
-        get => _apiClient;
-    }
+    private Server? _wsServer = null;
 
     public MainThing(CancellationToken forcedExitToken)
     {
@@ -33,6 +32,7 @@ public class MainThing
         _messageWriter = new MessageWriter();
         _timeTools = new TimeTools(TimeProvider.System);
     }
+
     public async Task RunAsync()
     {
         //Initialize
@@ -49,7 +49,7 @@ public class MainThing
         }
 
         await InitializeParsedDbAsync(configuration);
-        var matchExpected =  await InitializePuzzleHandlerAsync(computer, _db);
+        var matchExpected =  await InitializePuzzleHandlerAsync(computer);
         if (matchExpected)
         {
             _db.RemoveNonWorldPuzzles(_puzzleHandler);
@@ -59,12 +59,36 @@ public class MainThing
 
         await InitializeCetusClientAsync(configuration);
 
-        var teleportManager = new TeleportManager(_messageWriter);
+        if (computer.HasUiBinary() || Debugger.IsAttached)
+        {
+            _wsServer = new Server(_forcedExitToken);
+            var port = await _wsServer.StartWebSocketServer();
+            _messageWriter.WriteInitLine($"Started WebSocket server on port {port}", ConsoleColor.Green);
+            computer.SetSocketPort(port);
+        }
+
+        var uiCommands = _wsServer as ISocketUiCommands ?? new DummySocketUiCommands();
+
+        var targetManager = new TargetManager(_messageWriter, uiCommands);
+        var teleportManager = new TeleportManager(_messageWriter, targetManager);
+        var puzzleIterator = new PuzzleRouter(_messageWriter, configuration);
 
         _messageWriter.WriteInitLine("Poking spider", ConsoleColor.Green);
-        var puzzleIterator = new PuzzleRouter(_messageWriter, configuration);
         var serverTracker = new ServerTracker(_messageWriter);
-        var spider = new Spider(_messageWriter, configuration, _db, _apiClient, _timeTools, _puzzleHandler, computer, teleportManager, puzzleIterator, serverTracker);
+        var spider = new Spider(_messageWriter
+            , configuration
+            , _db
+            , _apiClient
+            , _timeTools
+            , _puzzleHandler
+            , computer
+            , puzzleIterator
+            , serverTracker
+            , uiCommands
+            , targetManager
+        );
+
+        _wsServer?.SetParserCommands(spider);
 
         //Screenshots only makes sense in online mode
         if (spider.IsOnline() && configuration.MonitorScreenshots)
@@ -85,7 +109,7 @@ public class MainThing
 
         _messageWriter.WriteInitLine($"Using '{logFilePath}' as the log file", ConsoleColor.Green);
         _messageWriter.WriteInitLine("Starting log processor", ConsoleColor.Green);
-        var processor = new LogProcessor(_messageWriter, computer, _forcedExitToken, spider);
+        var processor = new LogProcessor(_messageWriter, computer, _forcedExitToken, spider, teleportManager);
         await processor.StartAsync(logFilePath);
 
         _messageWriter.WriteWelcome();
@@ -103,6 +127,7 @@ public class MainThing
         await cycleTimer.StopAsync();
         await _db.StopAsync();
         await processor.StopAsync();
+        await (_wsServer?.StopWebSocketServer() ?? Task.CompletedTask);
     }
 
     private async Task<Configuration> InitializeConfigurationAsync()
@@ -114,7 +139,7 @@ public class MainThing
         return configuration;
     }
 
-    private async Task<bool> InitializePuzzleHandlerAsync(UserComputer computer, ParsedDatabase db)
+    private async Task<bool> InitializePuzzleHandlerAsync(UserComputer computer)
     {
         _puzzleHandler = new GamePuzzleHandler();
 

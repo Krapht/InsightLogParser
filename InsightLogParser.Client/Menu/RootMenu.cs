@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using InsightLogParser.Client.Websockets;
+﻿using InsightLogParser.Client.Websockets;
 
 namespace InsightLogParser.Client.Menu;
 
@@ -20,7 +19,12 @@ internal class RootMenu : IMenu
             {
                 yield return ('w', "Log-in to cetus web ui");
             }
-            yield return ('U', "--> Open the UI [WIP]");
+
+            if (_computer.HasUiBinary())
+            {
+                yield return ('U', "--> Open the UI [WIP]");
+            }
+
             yield return ('c', "--> Configuration [WIP]");
             yield return ('s', "--> Statistics");
             yield return ('r', "--> Routes");
@@ -47,36 +51,36 @@ internal class RootMenu : IMenu
             case 'w':
                 await _spider.OpenCetusWebAsync().ConfigureAwait(ConfigureAwaitOptions.None);
                 return MenuResult.Ok;
+
+            case 'U':
+                if (!_computer.HasUiBinary())
+                {
+                    return MenuResult.NotValidOption;
+                }
+
+                _computer.StartUi(_writer);
+                return MenuResult.Ok;
+
             case 'c':
                 _menuHandler.EnterMenu(new ConfigurationMenu(_spider));
                 return MenuResult.Ok;
+
             case 's':
                 _menuHandler.EnterMenu(new StatisticsMenu(_menuHandler, _spider));
                 return MenuResult.Ok;
+
             case 'r':
                 _menuHandler.EnterMenu(new RouteMenu(_menuHandler, _spider));
                 return MenuResult.Ok;
+
             case 'a':
                 _menuHandler.EnterMenu(new AdvancedMenu(_computer, _writer, _spider));
                 return MenuResult.Ok;
+
             case 'C':
                 _menuHandler.EnterMenu(new CheeseMenu(_spider, _writer));
                 return MenuResult.Ok;
-            case 'U':
-                if (Process.GetProcessesByName("InsightLogParser.UI").Length != 0)
-                {
-                    _writer.WriteDebug("UI is already running");
-                }
-                else if (Server.Port == 0)
-                {
-                    _writer.WriteError("Server is not running");
-                }
-                else
-                {
-                    Process.Start("InsightLogParser.UI.exe", $"-port {Server.Port}");
-                }
-                
-                return MenuResult.Ok;
+
             default:
                 return MenuResult.NotValidOption;
         }

@@ -1,5 +1,4 @@
 using InsightLogParser.Client;
-using InsightLogParser.Client.Websockets;
 
 try
 {
@@ -18,15 +17,9 @@ try
     Console.CancelKeyPress += ConsoleOnCancelKeyPress;
 
     var mainThing = new MainThing(forcedExitSource.Token);
-    var webSocketServer = Server.StartWebSocketServer(forcedExitSource.Token, mainThing);
-
     await mainThing.RunAsync();
 
-    await Server.StopWebSocketServer();
-
     forcedExitSource.Cancel();
-
-    await webSocketServer;
 
     Console.WriteLine("Successfully shut down, press any key to exit");
     Console.ReadKey(true);

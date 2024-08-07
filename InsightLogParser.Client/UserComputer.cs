@@ -32,6 +32,8 @@ internal class UserComputer
         return targetFolder;
     });
 
+    private int _socketPort = 0;
+
     public UserComputer(Configuration configuration, MessageWriter messageWriter)
     {
         _configuration = configuration;
@@ -356,4 +358,36 @@ internal class UserComputer
         });
     }
 
+    public bool HasUiBinary()
+    {
+        return File.Exists("InsightLogParser.UI.exe");
+    }
+
+    public void StartUi(MessageWriter writer)
+    {
+        var processes = Process.GetProcessesByName("InsightLogParser.UI");
+
+        if (processes.Length != 0)
+        {
+            writer.WriteDebug("UI is already running");
+        }
+        else if (_socketPort == 0)
+        {
+            writer.WriteError("Server is not running");
+        }
+        else
+        {
+            Process.Start("InsightLogParser.UI.exe", $"-port {_socketPort}");
+        }
+
+        foreach (var process in processes)
+        {
+            process.Dispose();
+        }
+    }
+
+    public void SetSocketPort(int wsPort)
+    {
+        _socketPort = wsPort;
+    }
 }

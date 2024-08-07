@@ -7,16 +7,23 @@ namespace InsightLogParser.Client.Parsing
         private readonly MessageWriter _messageWriter;
         private readonly UserComputer _computer;
         private readonly Spider _spider;
+        private readonly TeleportManager _teleportManager;
         private readonly CancellationTokenSource _stopTokenSource;
 
         private Task _processingTask = null!;
         private bool _started;
 
-        public LogProcessor(MessageWriter messageWriter, UserComputer computer, CancellationToken forcedExitToken, Spider spider)
+        public LogProcessor(MessageWriter messageWriter
+            , UserComputer computer
+            , CancellationToken forcedExitToken
+            , Spider spider
+            , TeleportManager teleportManager
+        )
         {
             _messageWriter = messageWriter;
             _computer = computer;
             _spider = spider;
+            _teleportManager = teleportManager;
             _stopTokenSource = CancellationTokenSource.CreateLinkedTokenSource(forcedExitToken);
         }
 
@@ -152,7 +159,7 @@ namespace InsightLogParser.Client.Parsing
                             case LogEventType.Teleport:
                                 if (logEvent.Coordinate != null)
                                 {
-                                    _spider.Teleport(logEvent.Coordinate.Value);
+                                    _teleportManager.Teleport(logEvent.Coordinate.Value);
                                 }
                                 else
                                 {
