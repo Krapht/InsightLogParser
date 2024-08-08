@@ -7,8 +7,34 @@
     <Nullable>enable</Nullable>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
+
+  <Target Name="CleanPublish" BeforeTargets="Build">
+    <ItemGroup>
+      <CurrentFiles Include="$(PublishDir)/*.*" />
+    </ItemGroup> 
+    <Delete Files="@(CurrentFiles)" />
+  </Target>
+
   <Target Name="MakeZip" AfterTargets="Publish">
-    <ZipDirectory SourceDirectory="$(PublishDir)" DestinationFile="$(OutputPath)\release.zip" />
+    <PropertyGroup>
+      <PublishZipName>$(OutputPath)\release.zip</PublishZipName>
+      <PublishUIZipName>$(OutputPath)\releaseWithUi.zip</PublishUIZipName>
+    </PropertyGroup>
+    <ItemGroup>
+      <UiFiles Include="..\InsightLogParser.UI\bin\$(Configuration)\**\InsightLogParser.UI.*" />
+      <PublishZip Include="$(PublishZipName)" />
+      <PublishUIZip Include="$(PublishUIZipName)" />
+    </ItemGroup>
+
+    <!--Make zip without UI-->
+    <Delete Condition="Exists('$(PublishZipName)')" Files="@(PublishZip)" />
+    <ZipDirectory SourceDirectory="$(PublishDir)" DestinationFile="$(PublishZipName)" />
+
+    <!--Make zip with UI-->
+    <Copy SourceFiles="@(UiFiles)" DestinationFolder="$(PublishDir)" />
+    <Delete Condition="Exists('$(PublishUIZipName)')" Files="@(PublishUIZip)" />
+    <ZipDirectory SourceDirectory="$(PublishDir)" DestinationFile="$(PublishUIZipName)" />
+    
   </Target>
   <ItemGroup>
     <ProjectReference Include="..\InsightLogParser.Common\InsightLogParser.Common.csproj" />
