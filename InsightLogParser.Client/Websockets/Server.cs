@@ -17,6 +17,17 @@ internal class Server : ISocketUiCommands
     private ISocketParserCommands _parserCommands;
     private Task _listenerTask;
 
+    // setTarget data
+    private Coordinate _target = new Coordinate(0, 0, 0);
+    private PuzzleType _puzzleType = PuzzleType.Unknown;
+    private int _puzzleId = 0;
+    private int _routeNumber = 0;
+    private int _routeLength = 0;
+
+    // movePlayer data
+    private Coordinate _destination = new Coordinate(0, 0, 0);
+
+    // setConnected data
     private bool _isConnected = false;
     private string _ipAddress = string.Empty;
 
@@ -112,11 +123,9 @@ internal class Server : ISocketUiCommands
         // Initialize the data for the UI.
         if (webSocket.State == WebSocketState.Open)
         {
-            _ = SendAsync(new {
-                type = "setConnection",
-                isConnected = _isConnected,
-                ipAddress = _ipAddress
-            }, webSocket);
+            SetTarget(_target, new InsightPuzzle { Type = _puzzleType, KrakenId = _puzzleId }, _routeNumber, _routeLength, webSocket);
+            MovePlayer(_destination, webSocket);
+            SetConnection(_isConnected, _ipAddress, webSocket);
         }
 
         while (webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
@@ -230,41 +239,53 @@ internal class Server : ISocketUiCommands
 
     #region ISocketUiCommands
 
-    public void SetTarget(Coordinate coordinate, InsightPuzzle puzzle, int routeNumber, int routeLength)
+    public void SetTarget(Coordinate target, InsightPuzzle puzzle, int routeNumber, int routeLength, WebSocket? websocket)
     {
+        if (target.X == 0 && target.Y == 0 && target.Z == 0) return;
+        
         _ = SendAsync(new {
             type = "setTarget",
             target = new {
-                coordinate.X,
-                coordinate.Y,
-                coordinate.Z
+                target.X,
+                target.Y,
+                target.Z
             },
             puzzleType = (int)puzzle.Type,
             puzzleId = puzzle.KrakenId,
             routeNumber = routeNumber,
             routeLength = routeLength,
-        });
+        }, websocket);
+
+        _target = target;
+        _puzzleType = puzzle.Type;
+        _puzzleId = puzzle.KrakenId;
+        _routeNumber = routeNumber;
+        _routeLength = routeLength;
     }
 
-    public void MovePlayer(Coordinate coordinate)
+    public void MovePlayer(Coordinate destination, WebSocket? websocket)
     {
+        if (destination.X == 0 && destination.Y == 0 && destination.Z == 0) return;
+
         _ = SendAsync(new {
             type = "movePlayer",
             destination = new {
-                coordinate.X,
-                coordinate.Y,
-                coordinate.Z
+                destination.X,
+                destination.Y,
+                destination.Z
             }
-        });
+        }, websocket);
+
+        _destination = destination;
     }
 
-    public void SetConnection(bool isConnected, string ipAddress)
+    public void SetConnection(bool isConnected, string ipAddress, WebSocket? websocket)
     {
         _ = SendAsync(new {
             type = "setConnection",
             isConnected = isConnected,
             ipAddress = ipAddress
-        });
+        }, websocket);
 
         _ipAddress = ipAddress;
         _isConnected = isConnected;
