@@ -66,6 +66,7 @@ namespace InsightLogParser.Client
             _sessionStart = timestamp;
             _serverTracker.Connected(serverAddress);
             _messageWriter.ConnectedToServer(serverAddress, timestamp);
+            _uiCommands.SetConnection(true, serverAddress);
         }
 
         public void ConnectingToServer(string serverAddress)
@@ -78,6 +79,7 @@ namespace InsightLogParser.Client
             _messageWriter.SessionEnded(timestamp, _serverAddress);
             _sessionStart = null;
             _serverAddress = null;
+            _uiCommands.SetConnection(false, string.Empty);
         }
 
         public async Task SessionBeingDisconnectedAsync()

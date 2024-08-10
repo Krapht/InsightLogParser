@@ -52,6 +52,12 @@ namespace InsightLogParser.UI {
                     await SetTarget(location, (PuzzleType)puzzleType, puzzleId, routeNumber, routeLength);
                     break;
                 }
+                case "setConnection": {
+                    var isConnected = data.RootElement.GetProperty("isConnected").GetBoolean();
+                    var ipAddress = data.RootElement.TryGetProperty("ipAddress", out var ipAddressElement) ? ipAddressElement.GetString() : string.Empty;
+                    SetConnection(isConnected, ipAddress);
+                    break;
+                }
                 case "shutdown":
                     Application.Exit();
                     break;
@@ -121,6 +127,10 @@ namespace InsightLogParser.UI {
                     MessageBox.Show(ex.Message);
                 }
             }
+        }
+
+        private void SetConnection(bool isConnected, string ipAddress) {
+            lblIP.Text = isConnected ? $"Connected to {ipAddress}" : "Disconnected";
         }
 
         private void UpdateTarget() {
