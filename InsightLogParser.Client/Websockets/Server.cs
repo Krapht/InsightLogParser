@@ -17,6 +17,9 @@ internal class Server : ISocketUiCommands
     private ISocketParserCommands _parserCommands;
     private Task _listenerTask;
 
+    private bool _isConnected = false;
+    private string _ipAddress = string.Empty;
+
     public Server(CancellationToken forcedCancellationToken)
     {
         _stopTokenSource = CancellationTokenSource.CreateLinkedTokenSource(forcedCancellationToken);
@@ -106,6 +109,16 @@ internal class Server : ISocketUiCommands
         // Add the connection.
         _clients.Add(webSocket);
 
+        // Initialize the data for the UI.
+        if (webSocket.State == WebSocketState.Open)
+        {
+            _ = SendAsync(new {
+                type = "setConnection",
+                isConnected = _isConnected,
+                ipAddress = _ipAddress
+            }, webSocket);
+        }
+
         while (webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
         {
             var buffer = new byte[1024];
@@ -190,17 +203,28 @@ internal class Server : ISocketUiCommands
         _clients.TryTake(out _);
     }
 
-    private async Task SendAsync(object message)
+    private async Task SendAsync(object message, WebSocket? webSocket = null)
     {
         // Encode the message.
         var messageBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
         var messageSegment = new ArraySegment<byte>(messageBuffer);
 
-        // Send the message to all clients.
-        foreach (var client in _clients)
+        if (webSocket == null)
         {
-            if (client.State != WebSocketState.Open) continue;
-            await client.SendAsync(messageSegment, WebSocketMessageType.Text, true, CancellationToken.None);
+            // Send the message to all clients.
+            foreach (var client in _clients)
+            {
+                if (client.State != WebSocketState.Open) continue;
+                await client.SendAsync(messageSegment, WebSocketMessageType.Text, true, CancellationToken.None);
+            }
+        }
+        else
+        {
+            // Send the message to a specific client.
+            if (webSocket.State == WebSocketState.Open)
+            {
+                await webSocket.SendAsync(messageSegment, WebSocketMessageType.Text, true, CancellationToken.None);
+            }
         }
     }
 
@@ -234,6 +258,17 @@ internal class Server : ISocketUiCommands
         });
     }
 
+    public void SetConnection(bool isConnected, string ipAddress)
+    {
+        _ = SendAsync(new {
+            type = "setConnection",
+            isConnected = isConnected,
+            ipAddress = ipAddress
+        });
+
+        _ipAddress = ipAddress;
+        _isConnected = isConnected;
+    }
 
     #endregion
 }

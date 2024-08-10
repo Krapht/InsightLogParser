@@ -32,7 +32,7 @@ namespace InsightLogParser.UI {
         // Show exception message
         static void ShowException(Exception ex) {
             if (ex != null) {
-                MessageBox.Show(ex.Message, "Unhandled Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message + " " + ex.StackTrace, "Unhandled Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

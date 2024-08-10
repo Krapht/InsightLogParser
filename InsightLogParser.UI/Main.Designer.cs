@@ -32,17 +32,20 @@
             picArrow = new PictureBox();
             lblPuzzleType = new Label();
             lblID = new Label();
-            tableLayoutPanel1 = new TableLayoutPanel();
-            picMap = new PictureBox();
+            pnlRoute = new TableLayoutPanel();
             picScreenshot = new PictureBox();
+            picMap = new PictureBox();
+            strStatus = new StatusStrip();
+            lblIP = new ToolStripStatusLabel();
             pnlMain.SuspendLayout();
             pnlTarget.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picPuzzleType).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picCompass).BeginInit();
             ((System.ComponentModel.ISupportInitialize)picArrow).BeginInit();
-            tableLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)picMap).BeginInit();
+            pnlRoute.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picScreenshot).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)picMap).BeginInit();
+            strStatus.SuspendLayout();
             SuspendLayout();
             // 
             // pnlMain
@@ -50,7 +53,7 @@
             pnlMain.ColumnCount = 1;
             pnlMain.ColumnStyles.Add(new ColumnStyle());
             pnlMain.Controls.Add(pnlTarget, 0, 0);
-            pnlMain.Controls.Add(tableLayoutPanel1, 0, 1);
+            pnlMain.Controls.Add(pnlRoute, 0, 1);
             pnlMain.Dock = DockStyle.Fill;
             pnlMain.Location = new Point(0, 0);
             pnlMain.Margin = new Padding(0);
@@ -58,7 +61,7 @@
             pnlMain.RowCount = 2;
             pnlMain.RowStyles.Add(new RowStyle(SizeType.Absolute, 64F));
             pnlMain.RowStyles.Add(new RowStyle());
-            pnlMain.Size = new Size(800, 450);
+            pnlMain.Size = new Size(814, 447);
             pnlMain.TabIndex = 0;
             // 
             // pnlTarget
@@ -84,7 +87,7 @@
             pnlTarget.Name = "pnlTarget";
             pnlTarget.RowCount = 1;
             pnlTarget.RowStyles.Add(new RowStyle());
-            pnlTarget.Size = new Size(800, 64);
+            pnlTarget.Size = new Size(814, 64);
             pnlTarget.TabIndex = 0;
             // 
             // lbl2DDistance
@@ -166,25 +169,37 @@
             lblID.Location = new Point(192, 0);
             lblID.Margin = new Padding(0);
             lblID.Name = "lblID";
-            lblID.Size = new Size(608, 65);
+            lblID.Size = new Size(622, 65);
             lblID.TabIndex = 6;
             lblID.TextAlign = ContentAlignment.TopRight;
             // 
-            // tableLayoutPanel1
+            // pnlRoute
             // 
-            tableLayoutPanel1.ColumnCount = 2;
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 67F));
-            tableLayoutPanel1.Controls.Add(picScreenshot, 0, 0);
-            tableLayoutPanel1.Controls.Add(picMap, 0, 0);
-            tableLayoutPanel1.Dock = DockStyle.Fill;
-            tableLayoutPanel1.Location = new Point(0, 64);
-            tableLayoutPanel1.Margin = new Padding(0);
-            tableLayoutPanel1.Name = "tableLayoutPanel1";
-            tableLayoutPanel1.RowCount = 1;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.Size = new Size(800, 386);
-            tableLayoutPanel1.TabIndex = 1;
+            pnlRoute.ColumnCount = 2;
+            pnlRoute.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33F));
+            pnlRoute.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 67F));
+            pnlRoute.Controls.Add(picScreenshot, 0, 0);
+            pnlRoute.Controls.Add(picMap, 0, 0);
+            pnlRoute.Dock = DockStyle.Fill;
+            pnlRoute.Location = new Point(0, 64);
+            pnlRoute.Margin = new Padding(0);
+            pnlRoute.Name = "pnlRoute";
+            pnlRoute.RowCount = 2;
+            pnlRoute.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            pnlRoute.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            pnlRoute.Size = new Size(814, 386);
+            pnlRoute.TabIndex = 1;
+            // 
+            // picScreenshot
+            // 
+            picScreenshot.Dock = DockStyle.Fill;
+            picScreenshot.Location = new Point(268, 0);
+            picScreenshot.Margin = new Padding(0);
+            picScreenshot.Name = "picScreenshot";
+            picScreenshot.Size = new Size(546, 366);
+            picScreenshot.SizeMode = PictureBoxSizeMode.Zoom;
+            picScreenshot.TabIndex = 1;
+            picScreenshot.TabStop = false;
             // 
             // picMap
             // 
@@ -193,29 +208,39 @@
             picMap.Location = new Point(0, 0);
             picMap.Margin = new Padding(0);
             picMap.Name = "picMap";
-            picMap.Size = new Size(264, 386);
+            pnlRoute.SetRowSpan(picMap, 2);
+            picMap.Size = new Size(268, 386);
             picMap.SizeMode = PictureBoxSizeMode.Zoom;
             picMap.TabIndex = 0;
             picMap.TabStop = false;
             // 
-            // picScreenshot
+            // strStatus
             // 
-            picScreenshot.Dock = DockStyle.Fill;
-            picScreenshot.Location = new Point(264, 0);
-            picScreenshot.Margin = new Padding(0);
-            picScreenshot.Name = "picScreenshot";
-            picScreenshot.Size = new Size(536, 386);
-            picScreenshot.SizeMode = PictureBoxSizeMode.Zoom;
-            picScreenshot.TabIndex = 1;
-            picScreenshot.TabStop = false;
+            strStatus.BackColor = Color.Black;
+            strStatus.Items.AddRange(new ToolStripItem[] { lblIP });
+            strStatus.LayoutStyle = ToolStripLayoutStyle.Flow;
+            strStatus.Location = new Point(0, 447);
+            strStatus.Name = "strStatus";
+            strStatus.Size = new Size(814, 20);
+            strStatus.SizingGrip = false;
+            strStatus.TabIndex = 1;
+            // 
+            // lblIP
+            // 
+            lblIP.BackColor = Color.Black;
+            lblIP.ForeColor = Color.White;
+            lblIP.Name = "lblIP";
+            lblIP.Size = new Size(79, 15);
+            lblIP.Text = "Disconnected";
             // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Black;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(814, 467);
             Controls.Add(pnlMain);
+            Controls.Add(strStatus);
             Name = "Main";
             Text = "InsightLogParser.Client";
             pnlMain.ResumeLayout(false);
@@ -224,10 +249,13 @@
             ((System.ComponentModel.ISupportInitialize)picPuzzleType).EndInit();
             ((System.ComponentModel.ISupportInitialize)picCompass).EndInit();
             ((System.ComponentModel.ISupportInitialize)picArrow).EndInit();
-            tableLayoutPanel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)picMap).EndInit();
+            pnlRoute.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)picScreenshot).EndInit();
+            ((System.ComponentModel.ISupportInitialize)picMap).EndInit();
+            strStatus.ResumeLayout(false);
+            strStatus.PerformLayout();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -241,8 +269,10 @@
         private PictureBox picArrow;
         private Label lblPuzzleType;
         private Label lblID;
-        private TableLayoutPanel tableLayoutPanel1;
+        private TableLayoutPanel pnlRoute;
         private PictureBox picMap;
         private PictureBox picScreenshot;
+        private StatusStrip strStatus;
+        private ToolStripStatusLabel lblIP;
     }
 }

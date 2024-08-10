@@ -12,7 +12,7 @@ namespace InsightLogParser.UI.Websockets {
         public async Task ConnectAsync(int port) {
             try {
                 await _clientWebSocket.ConnectAsync(new Uri($"ws://localhost:{port}/ws/"), _cancellationTokenSource.Token);
-            } catch (Exception ex) {
+            } catch (Exception) {
                 _cancellationTokenSource.Cancel();
             }
             _ = ReceiveMessagesAsync();

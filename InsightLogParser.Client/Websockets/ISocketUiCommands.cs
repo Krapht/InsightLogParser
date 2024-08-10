@@ -19,6 +19,13 @@ public interface ISocketUiCommands
     /// </summary>
     /// <param name="coordinate">The coordinate of the last known player position</param>
     void MovePlayer(Coordinate coordinate);
+
+    /// <summary>
+    /// Updates the connection state
+    /// </summary>
+    /// <param name="isConnected">Whether the user is connected to the game</param>
+    /// <param name="ipAddress">The IP address of the server the user is connected to</param>
+    void SetConnection(bool isConnected, string ipAddress) { }
 }
 
 internal class DummySocketUiCommands : ISocketUiCommands
@@ -28,4 +35,7 @@ internal class DummySocketUiCommands : ISocketUiCommands
 
     //No-op
     public void MovePlayer(Coordinate coordinate) { }
+
+    //No-op
+    public void SetConnection(bool isConnected, string ipAddress) { }
 }
