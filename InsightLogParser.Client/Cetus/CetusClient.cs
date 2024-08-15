@@ -114,6 +114,20 @@ internal class CetusClient : ICetusClient
         return reply?.Code;
     }
 
+    public async Task PublishPresence(PlayerPresence presence)
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug($"CETUS: Publishing presence on server {presence.ServerIp}");
+        await MakePostAsync("api/v1/player/server", presence);
+    }
+
+    public async Task ClearPresence()
+    {
+        await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
+        _messageWriter.WriteDebug("CETUS: Clearing server presence");
+        await MakeDeleteAsync("api/v1/player/server");
+    }
+
     public async Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request)
     {
         await RefreshAuthIfNeeded().ConfigureAwait(ConfigureAwaitOptions.None);
@@ -148,6 +162,53 @@ internal class CetusClient : ICetusClient
         }
     }
 
+    private async Task MakePostAsync<TRequest>(string requestUri, TRequest request, bool isRetry = false)
+    {
+        try
+        {
+            var result = await _httpClient.PostAsJsonAsync(requestUri, request)
+                .ConfigureAwait(ConfigureAwaitOptions.None);
+            _messageWriter.WriteDebug($"CETUS: Got a {(int)result.StatusCode}-{result.StatusCode}");
+            if (!result.IsSuccessStatusCode)
+            {
+                if (!isRetry && result.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _messageWriter.WriteDebug("CETUS: Retrying once with fresh auth");
+                    var authResult = await RefreshAuthAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+                    if (!authResult) return;
+                    await MakePostAsync<TRequest>(requestUri, request, true).ConfigureAwait(ConfigureAwaitOptions.None);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            _messageWriter.WriteDebug($"CETUS: Exception: {e}");
+        }
+    }
+
+    private async Task MakeDeleteAsync(string requestUri, bool isRetry = false)
+    {
+        try
+        {
+            var result = await _httpClient.DeleteAsync(requestUri)
+                .ConfigureAwait(ConfigureAwaitOptions.None);
+            _messageWriter.WriteDebug($"CETUS: Got a {(int)result.StatusCode}-{result.StatusCode}");
+            if (!result.IsSuccessStatusCode)
+            {
+                if (!isRetry && result.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    _messageWriter.WriteDebug("CETUS: Retrying once with fresh auth");
+                    var authResult = await RefreshAuthAsync().ConfigureAwait(ConfigureAwaitOptions.None);
+                    if (!authResult) return;
+                    await MakeDeleteAsync(requestUri, true).ConfigureAwait(ConfigureAwaitOptions.None);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            _messageWriter.WriteDebug($"CETUS: Exception: {e}");
+        }
+    }
 
     public async Task<ZoneStatisticsResponse?> GetZoneStatisticsAsync(PuzzleZone zone)
     {

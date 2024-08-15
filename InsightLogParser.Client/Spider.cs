@@ -66,6 +66,13 @@ namespace InsightLogParser.Client
             _sessionStart = timestamp;
             _serverTracker.Connected(serverAddress);
             _messageWriter.ConnectedToServer(serverAddress, timestamp);
+            if (_configuration.PublishCurrentServerOnCetus)
+            {
+                _cetusClient.PublishPresence(new PlayerPresence
+                {
+                    ServerIp = _serverAddress?.Split(':')[0],
+                });
+            }
         }
 
         public void ConnectingToServer(string serverAddress)
@@ -78,6 +85,10 @@ namespace InsightLogParser.Client
             _messageWriter.SessionEnded(timestamp, _serverAddress);
             _sessionStart = null;
             _serverAddress = null;
+            if (_configuration.PublishCurrentServerOnCetus)
+            {
+                _cetusClient.ClearPresence();
+            }
         }
 
         public async Task SessionBeingDisconnectedAsync()

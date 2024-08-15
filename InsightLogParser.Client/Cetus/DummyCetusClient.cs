@@ -23,6 +23,16 @@ namespace InsightLogParser.Client.Cetus
             return Task.FromResult<ImportSaveResponse?>(null);
         }
 
+        public Task PublishPresence(PlayerPresence presence)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task ClearPresence()
+        {
+            return Task.CompletedTask;
+        }
+
         public Task<PuzzleStatusResponse?> GetPuzzleStatusAsync(PuzzleStatusRequest request)
         {
             return Task.FromResult<PuzzleStatusResponse?>(null);

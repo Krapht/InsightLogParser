@@ -3,7 +3,7 @@ namespace InsightLogParser.Client;
 
 public class Configuration
 {
-    public static readonly int CurrentConfigurationVersion = 5;
+    public static readonly int CurrentConfigurationVersion = 6;
 
     public int ConfigVersion { get; set; } = CurrentConfigurationVersion;
 
@@ -24,6 +24,7 @@ public class Configuration
     public string? CetusApiKey { get; set; }
     public Guid? CetusPlayerId { get; set; }
     public string? CetusUri { get; set; }
+    public bool PublishCurrentServerOnCetus { get; set; } = false;
 
     //Routes
     public bool ExcludeStalePuzzlesInRoutes { get; set; } = false;
