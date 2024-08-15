@@ -145,6 +145,7 @@ namespace InsightLogParser.Client.Parsing
                                         await _spider.ClosedAsync(logEvent.LogTime, puzzleId, zone, type, difficulty).ConfigureAwait(false);
                                         break;
                                     case "PressStartButton":
+                                        _messageWriter.WriteInfo("Attempting to connect...");
                                         break;
                                     //Ignore so hard it's not even in the debug output
                                     case "gm_heartbeat":
